@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Performance Reporting Portal - IOB</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="logo-section">
+        <h1>IOB</h1>
+        <p>Daily Performance Reporting Portal</p>
+      </div>
+      <div class="user-status" id="user-info-bar" style="display: none;">
+        <div>
+          <strong id="user-display-name">Loading...</strong>
+          <span id="user-display-role" class="badge badge-info">Role</span>
+        </div>
+        <button id="logout-btn" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; width: auto;">Logout</button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" id="main-navigation" style="display: none;">
+      <button class="nav-tab active" data-target="dashboard-view">Live Status Dashboard</button>
+      <button class="nav-tab" id="nav-reports" data-target="reports-view" style="display: none;">Submissions Log</button>
+      <button class="nav-tab" id="nav-entry-form" data-target="entry-view">Daily Entry Form</button>
+      <button class="nav-tab" id="nav-admin" data-target="admin-view" style="display: none;">Admin Targets</button>
+      <button class="nav-tab" id="nav-settings" data-target="settings-view" style="display: none;">App Settings</button>
+    </nav>
+
+    <!-- Running ticker from Admin -->
+    <div id="admin-ticker-bar" class="ticker-wrap" style="display: none;">
+      <span class="ticker-icon">📢</span>
+      <div class="ticker-content">
+        <marquee id="admin-ticker-text" scrollamount="4" behavior="scroll" direction="left">
+          Welcome to the IOB Daily Performance Reporting Portal. Please ensure all daily metrics are submitted by 17:00 EOD.
+        </marquee>
+      </div>
+    </div>
+
+    <!-- Main Views Container -->
+    <main>
+      <!-- 1. LOGIN VIEW -->
+      <section id="login-view" class="view-panel active">
+        <div class="login-wrapper">
+          <div class="login-card">
+            <div class="login-icon">🔑</div>
+            <h2>Employee Access</h2>
+            <p>Please enter your employee Roll Number to access your assigned branch portal.</p>
+            <form id="login-form">
+              <div class="form-group" style="text-align: left;">
+                <label for="login-roll">Unique Roll Number</label>
+                <input type="text" id="login-roll" class="form-input" placeholder="e.g., 1001 or ADMIN" required autocomplete="off">
+              </div>
+              <div class="form-group" style="text-align: left;">
+                <label for="login-pass">Password</label>
+                <input type="password" id="login-pass" class="form-input" placeholder="Enter Password" required autocomplete="off">
+              </div>
+              <button type="submit" class="btn btn-primary">Verify Credentials</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. LIVE DASHBOARD VIEW -->
+      <section id="dashboard-view" class="view-panel">
+        <div class="card">
+          <div class="card-title">📊 Today's Aggregated Performance Summary</div>
+          <div class="dashboard-summary-grid">
+            <div class="summary-stat-card">
+              <div class="stat-label">Total Accounts Opened</div>
+              <div id="stat-total-accounts" class="stat-value">0</div>
+            </div>
+            <div class="summary-stat-card">
+              <div class="stat-label">SB Balance Growth</div>
+              <div id="stat-total-sb-growth" class="stat-value">₹0</div>
+            </div>
+            <div class="summary-stat-card">
+              <div class="stat-label">CD Balance Growth</div>
+              <div id="stat-total-cd-growth" class="stat-value">₹0</div>
+            </div>
+            <div class="summary-stat-card">
+              <div class="stat-label">Submission Rate</div>
+              <div id="stat-submission-rate" class="stat-value">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔍 Live Submission Tracking Grid</div>
+          <div class="list-filters">
+            <input type="text" id="db-search" class="filter-input" placeholder="Search by SOL Code or Branch Name..." style="width: 250px;">
+          </div>
+          <div class="status-grid" id="branches-status-grid">
+            <!-- Dynamically populated status boxes -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. SUBMISSIONS REALTIME REPORTS VIEW -->
+      <section id="reports-view" class="view-panel">
+        <div class="card">
+          <div class="card-title">📋 Consolidated Branch Submissions</div>
+          <div class="list-filters">
+            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+              <span style="font-size: 0.65rem; font-weight: 600; color: var(--text-secondary);">DATE</span>
+              <input type="date" id="report-date-filter" class="filter-input">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+              <span style="font-size: 0.65rem; font-weight: 600; color: var(--text-secondary);">SEARCH</span>
+              <input type="text" id="report-search-filter" class="filter-input" placeholder="Search Branch/Name...">
+            </div>
+            <div style="display: flex; align-items: flex-end; margin-left: auto;">
+              <button id="btn-export-csv" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 1rem;">Export Filtered to CSV</button>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto; margin-top: 1rem; border: 1px solid var(--border-color); border-radius: 0.375rem;">
+            <table class="matrix-table" id="consolidated-report-table" style="margin-bottom: 0;">
+              <thead>
+                <!-- Will be rendered dynamically based on fields -->
+              </thead>
+              <tbody>
+                <!-- Rows loaded via Apps Script -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. ENTRY FORM VIEW -->
+      <section id="entry-view" class="view-panel">
+        <div class="card" style="margin-bottom: 1rem;">
+          <h2 style="font-weight: 600; font-size: 1.25rem;">Daily Reporting Form</h2>
+          <p style="color: var(--text-secondary); font-size: 0.875rem;" id="form-branch-heading">Reporting details for Branch SOL</p>
+        </div>
+
+        <form id="reporting-form">
+          <!-- 1st Line Officer Form -->
+          <div id="form-1st-line-section" style="display: none;">
+            
+            <!-- Grid 1: Low Balance Accounts Funding -->
+            <div class="card">
+              <div class="card-title">💰 Low Balance Accounts Funding</div>
+              <table class="matrix-table">
+                <thead>
+                  <tr>
+                    <th>Segment</th>
+                    <th>Total Low Balance Accounts</th>
+                    <th>Funded Today (Count)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>SB</strong></td>
+                    <td><span id="low-bal-total-sb">0</span></td>
+                    <td><input type="number" min="0" id="sb-low-bal-funded" name="fundingSB" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>CD</strong></td>
+                    <td><span id="low-bal-total-cd">0</span></td>
+                    <td><input type="number" min="0" id="cd-low-bal-funded" name="fundingCD" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Grid 2: Balance Growth with automatic status -->
+            <div class="card">
+              <div class="card-title">📈 Balance Growth</div>
+              <table class="matrix-table">
+                <thead>
+                  <tr>
+                    <th>Segment</th>
+                    <th>Balance as on 31.03</th>
+                    <th>Yesterday's Balance</th>
+                    <th>Today's Growth (₹)</th>
+                    <th>Status vs 31.03 (Auto)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>SB</strong></td>
+                    <td><span id="bal-31mar-sb">₹0</span></td>
+                    <td><span id="bal-yest-sb">₹0</span></td>
+                    <td><input type="number" id="sb-growth" name="growthSB" class="matrix-input" placeholder="0"></td>
+                    <td><span id="growth-status-sb" class="badge badge-neutral">—</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>CD</strong></td>
+                    <td><span id="bal-31mar-cd">₹0</span></td>
+                    <td><span id="bal-yest-cd">₹0</span></td>
+                    <td><input type="number" id="cd-growth" name="growthCD" class="matrix-input" placeholder="0"></td>
+                    <td><span id="growth-status-cd" class="badge badge-neutral">—</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>TD</strong></td>
+                    <td><span id="bal-31mar-td">₹0</span></td>
+                    <td><span id="bal-yest-td">₹0</span></td>
+                    <td><input type="number" id="td-growth" name="growthTD" class="matrix-input" placeholder="0"></td>
+                    <td><span id="growth-status-td" class="badge badge-neutral">—</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Grid 3: Account Opening (target, run rate, gap prefilled; today entered) -->
+            <div class="card">
+              <div class="card-title">📖 Account Opening Performance</div>
+              <table class="matrix-table">
+                <thead>
+                  <tr>
+                    <th>Account Type</th>
+                    <th>Monthly Target</th>
+                    <th>Opened up to Yesterday</th>
+                    <th>Gap to Target</th>
+                    <th>Today's Actuals (Opened)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>SB Accounts</strong></td>
+                    <td><span id="ao-target-sb">0</span></td>
+                    <td><span id="ao-uptoyest-sb">0</span></td>
+                    <td><span id="ao-gap-sb">0</span></td>
+                    <td><input type="number" min="0" id="accts-opened-sb" name="acctsOpenedSB" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>CD Accounts</strong></td>
+                    <td><span id="ao-target-cd">0</span></td>
+                    <td><span id="ao-uptoyest-cd">0</span></td>
+                    <td><span id="ao-gap-cd">0</span></td>
+                    <td><input type="number" min="0" id="accts-opened-cd" name="acctsOpenedCD" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Grid 4: Premium Product Adoption (FY / prev month / current month prefilled) -->
+            <div class="card">
+              <div class="card-title">💎 Premium Product Adoption</div>
+              <table class="matrix-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>FY Performance</th>
+                    <th>Previous Month</th>
+                    <th>Current Month (Up to Yesterday)</th>
+                    <th>Opened Today</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>SB Diamond</strong></td>
+                    <td><span id="pa-fy-diamond">0</span></td>
+                    <td><span id="pa-prev-diamond">0</span></td>
+                    <td><span id="pa-curr-diamond">0</span></td>
+                    <td><input type="number" min="0" id="diamond-accts" name="acctsDiamond" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>SB Platinum</strong></td>
+                    <td><span id="pa-fy-platinum">0</span></td>
+                    <td><span id="pa-prev-platinum">0</span></td>
+                    <td><span id="pa-curr-platinum">0</span></td>
+                    <td><input type="number" min="0" id="platinum-accts" name="acctsPlatinum" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Ultra HNI</strong></td>
+                    <td><span id="pa-fy-uhni">0</span></td>
+                    <td><span id="pa-prev-uhni">0</span></td>
+                    <td><span id="pa-curr-uhni">0</span></td>
+                    <td><input type="number" min="0" id="uhni-accts" name="acctsUltraHni" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>SB Premium</strong></td>
+                    <td><span id="pa-fy-premium">0</span></td>
+                    <td><span id="pa-prev-premium">0</span></td>
+                    <td><span id="pa-curr-premium">0</span></td>
+                    <td><input type="number" min="0" id="premium-accts" name="acctsPremium" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Grid 5: Inoperative / Inactive / DEAF activation (base count + amount prefilled) -->
+            <div class="card">
+              <div class="card-title">📉 Inoperative, Inactive & DEAF Account Activation</div>
+              <table class="matrix-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Base Count (Last Month End)</th>
+                    <th>Base Amount (Last Month End)</th>
+                    <th>Activated Today (Count)</th>
+                    <th>Activated Today (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Inoperative</strong></td>
+                    <td><span id="act-base-count-inoperative">0</span></td>
+                    <td><span id="act-base-amt-inoperative">₹0</span></td>
+                    <td><input type="number" min="0" name="activationInoperative" class="matrix-input" placeholder="0"></td>
+                    <td><input type="number" min="0" name="activationInoperativeAmt" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Inactive</strong></td>
+                    <td><span id="act-base-count-inactive">0</span></td>
+                    <td><span id="act-base-amt-inactive">₹0</span></td>
+                    <td><input type="number" min="0" name="activationInactive" class="matrix-input" placeholder="0"></td>
+                    <td><input type="number" min="0" name="activationInactiveAmt" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>DEAF</strong></td>
+                    <td><span id="act-base-count-deaf">0</span></td>
+                    <td><span id="act-base-amt-deaf">₹0</span></td>
+                    <td><input type="number" min="0" name="activationDeaf" class="matrix-input" placeholder="0"></td>
+                    <td><input type="number" min="0" name="activationDeafAmt" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Grid 6: Special Sourcing & Digital Banking -->
+            <div class="form-grid-2">
+              <!-- Special Sourcing -->
+              <div class="card">
+                <div class="card-title">🏢 Special Sourcing Categories</div>
+                <div class="form-group">
+                  <label for="govt-accts">Government Accounts Opened</label>
+                  <input type="number" min="0" id="govt-accts" name="acctsGovt" class="form-input" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label for="temple-accts">Temple Accounts Opened</label>
+                  <input type="number" min="0" id="temple-accts" name="acctsTemple" class="form-input" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label for="contractor-accts">Contractor Accounts Opened</label>
+                  <input type="number" min="0" id="contractor-accts" name="acctsContractors" class="form-input" placeholder="0">
+                </div>
+              </div>
+
+              <!-- Digital Banking Products -->
+              <div class="card">
+                <div class="card-title">🌐 Digital Banking Products</div>
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label for="credit-cards">Credit Cards Sourced</label>
+                    <input type="number" min="0" id="credit-cards" name="creditCards" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="iob-connect">IOB Connect Signups</label>
+                    <input type="number" min="0" id="iob-connect" name="iobConnect" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="net-banking">New Internet Banking Logins</label>
+                    <input type="number" min="0" id="net-banking" name="netBanking" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="social-media-count">Official Social Media Updates Shared (Count)</label>
+                    <input type="number" min="0" id="social-media-count" name="socialMediaCount" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="fastag">FASTag Accounts Sourced</label>
+                    <input type="number" min="0" id="fastag" name="fastag" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="accts-opened-tab">Accounts Opened via TAB</label>
+                    <input type="number" min="0" id="accts-opened-tab" name="acctsOpenedTAB" class="form-input" placeholder="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Grid 7: Schemes & Jewel/Insurance -->
+            <div class="form-grid-2">
+              <!-- Scheme Cross-sell -->
+              <div class="card">
+                <div class="card-title">📜 Scheme Cross-sell & CASA</div>
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label for="nps-accts">NPS Accounts Sourced</label>
+                    <input type="number" min="0" id="nps-accts" name="nps" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="ssy-accts">SSY Accounts Sourced</label>
+                    <input type="number" min="0" id="ssy-accts" name="ssy" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="ppf-accts">PPF Accounts Sourced</label>
+                    <input type="number" min="0" id="ppf-accts" name="ppf" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="pmsby">PMSBY Registrations</label>
+                    <input type="number" min="0" id="pmsby" name="pmsby" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="pmjjby">PMJJBY Registrations</label>
+                    <input type="number" min="0" id="pmjjby" name="pmjjby" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="casa-winback">CASA Winback (Allotted: <span id="casa-winback-allotted">0</span>)</label>
+                    <input type="number" min="0" id="casa-winback" name="casaWinbackCompleted" class="form-input" placeholder="Completed today (count)">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Jewel Loans & Insurance -->
+              <div class="card">
+                <div class="card-title">💍 Jewel Loans & Personal Accident Insurance</div>
+                <div class="form-group">
+                  <label for="jewel-loans-fresh">Jewel Loans (Fresh Count)</label>
+                  <input type="number" min="0" id="jewel-loans-fresh" name="jewelLoansFresh" class="form-input" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label for="jewel-loans-renewal">Jewel Loans (Renewal Count)</label>
+                  <input type="number" min="0" id="jewel-loans-renewal" name="jewelLoansRenewal" class="form-input" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label for="accident-insurance">Personal Accident Insurance (Count)</label>
+                  <input type="number" min="0" id="accident-insurance" name="accidentInsurance" class="form-input" placeholder="0">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2nd Line Officer Form -->
+          <div id="form-2nd-line-section" style="display: none;">
+            <!-- SB, CD, CASA, TD overall Status Selection -->
+            <div class="card">
+              <div class="card-title">⚖️ EOD Status & Systems Balance check</div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label>Overall SB Segment Status</label>
+                  <div class="status-radio-group">
+                    <input type="radio" id="2nd-sb-pos" name="statusSB2nd" value="Positive" checked>
+                    <label for="2nd-sb-pos" class="status-radio-label">Positive</label>
+                    <input type="radio" id="2nd-sb-neg" name="statusSB2nd" value="Negative">
+                    <label for="2nd-sb-neg" class="status-radio-label">Negative</label>
+                    <input type="radio" id="2nd-sb-ach" name="statusSB2nd" value="Achieved">
+                    <label for="2nd-sb-ach" class="status-radio-label">Achieved</label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Overall CD Segment Status</label>
+                  <div class="status-radio-group">
+                    <input type="radio" id="2nd-cd-pos" name="statusCD2nd" value="Positive" checked>
+                    <label for="2nd-cd-pos" class="status-radio-label">Positive</label>
+                    <input type="radio" id="2nd-cd-neg" name="statusCD2nd" value="Negative">
+                    <label for="2nd-cd-neg" class="status-radio-label">Negative</label>
+                    <input type="radio" id="2nd-cd-ach" name="statusCD2nd" value="Achieved">
+                    <label for="2nd-cd-ach" class="status-radio-label">Achieved</label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Overall CASA Status</label>
+                  <div class="status-radio-group">
+                    <input type="radio" id="2nd-casa-pos" name="statusCASA2nd" value="Positive" checked>
+                    <label for="2nd-casa-pos" class="status-radio-label">Positive</label>
+                    <input type="radio" id="2nd-casa-neg" name="statusCASA2nd" value="Negative">
+                    <label for="2nd-casa-neg" class="status-radio-label">Negative</label>
+                    <input type="radio" id="2nd-casa-ach" name="statusCASA2nd" value="Achieved">
+                    <label for="2nd-casa-ach" class="status-radio-label">Achieved</label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Overall TD Status</label>
+                  <div class="status-radio-group">
+                    <input type="radio" id="2nd-td-pos" name="statusTD2nd" value="Positive" checked>
+                    <label for="2nd-td-pos" class="status-radio-label">Positive</label>
+                    <input type="radio" id="2nd-td-neg" name="statusTD2nd" value="Negative">
+                    <label for="2nd-td-neg" class="status-radio-label">Negative</label>
+                    <input type="radio" id="2nd-td-ach" name="statusTD2nd" value="Achieved">
+                    <label for="2nd-td-ach" class="status-radio-label">Achieved</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Inoperative Reactivations Matrix from sketch -->
+            <div class="card">
+              <div class="card-title">📉 Inoperative, Inactive, DEAF Reactivation Grid</div>
+              <table class="matrix-table">
+                <thead>
+                  <tr>
+                    <th>Account Category</th>
+                    <th>Base Target (Monthly)</th>
+                    <th>Today's Reactivation/Reduction (Count)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Inoperative Accounts</strong></td>
+                    <td><span id="base-inoperative">0</span></td>
+                    <td><input type="number" name="reductionInoperative" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Inactive Accounts</strong></td>
+                    <td><span id="base-inactive">0</span></td>
+                    <td><input type="number" name="reductionInactive" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>DEAF Accounts</strong></td>
+                    <td><span id="base-deaf">0</span></td>
+                    <td><input type="number" name="reductionDeaf" class="matrix-input" placeholder="0"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Compliance parameters -->
+            <div class="card">
+              <div class="card-title">📝 Operations & Compliance Audit</div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="rekyc-completed">REKYC Completed today (Count)</label>
+                  <input type="number" id="rekyc-completed" name="rekycCompleted" class="form-input" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label for="nomination-updated">Nomination updates processed today (Count)</label>
+                  <input type="number" id="nomination-updated" name="nominationUpdated" class="form-input" placeholder="0">
+                </div>
+                <div class="form-group">
+                  <label for="dqi-progress">DQI Progress (Rectifications Completed today)</label>
+                  <input type="number" id="dqi-progress" name="dqiProgress" class="form-input" placeholder="0">
+                </div>
+              </div>
+
+              <div class="form-checkbox-group" style="margin-top: 1rem;">
+                <input type="checkbox" id="powerplay-intent" name="powerplayIntent">
+                <label for="powerplay-intent" style="font-weight: 500;">Powerplay Intent Compliance checklists fully verified for EOD</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- RO Guardian Officer Form -->
+          <div id="form-ro-guardian-section" style="display: none;">
+            <div class="card">
+              <div class="card-title">🛡️ Guardian Multi-Branch Audit Review</div>
+              <div class="form-group" style="max-width: 320px;">
+                <label for="guardian-sol-select">Select Branch to Report On</label>
+                <select id="guardian-sol-select" class="form-select" required>
+                  <!-- Populate assigned sols -->
+                </select>
+              </div>
+
+              <div class="form-checkbox-group" style="margin: 1.5rem 0;">
+                <input type="checkbox" id="ro-campaigns-checked" name="roCampaignsChecked">
+                <label for="ro-campaigns-checked" style="font-weight: 600;">Verified target bases vs actual developments for ongoing branch campaigns today</label>
+              </div>
+
+              <div class="form-group">
+                <label for="ro-notes">Supervisor Audit Notes / Escalated issues</label>
+                <textarea id="ro-notes" name="roNotes" rows="4" class="form-input" placeholder="Enter instructions or critical branch remarks..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loan Sanctions Section -->
+          <div class="card" style="margin-top: 1.5rem;" id="form-loans-section">
+            <div class="card-title">💵 Loan Sanctions Today</div>
+            <div class="form-grid-3">
+              <div class="form-group" id="group-loan-housing">
+                <label for="loan-housing">Housing Loan Sanctions (No.)</label>
+                <input type="number" min="0" id="loan-housing" name="loanHousing" class="form-input" placeholder="0">
+              </div>
+              <div class="form-group" id="group-loan-vehicle">
+                <label for="loan-vehicle">Vehicle Loan Sanctions (No.)</label>
+                <input type="number" min="0" id="loan-vehicle" name="loanVehicle" class="form-input" placeholder="0">
+              </div>
+              <div class="form-group" id="group-loan-personal">
+                <label for="loan-personal">Personal Loan Sanctions (No.)</label>
+                <input type="number" min="0" id="loan-personal" name="loanPersonal" class="form-input" placeholder="0">
+              </div>
+              <div class="form-group" id="group-loan-msme">
+                <label for="loan-msme">Core MSME Sanctions (No.)</label>
+                <input type="number" min="0" id="loan-msme" name="loanMSME" class="form-input" placeholder="0">
+              </div>
+              <div class="form-group" id="group-loan-agri">
+                <label for="loan-agri">Core Agri Sanctions (No.)</label>
+                <input type="number" min="0" id="loan-agri" name="loanAgri" class="form-input" placeholder="0">
+              </div>
+            </div>
+          </div>
+
+          <!-- Shared Submit Panel -->
+          <div class="card" style="display: flex; flex-direction: column; gap: 1rem; align-items: flex-end;">
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <label for="form-date" style="font-weight: 600; font-size: 0.875rem; margin: 0;">Reporting Date:</label>
+              <input type="date" id="form-date" class="filter-input" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-submit-form">Submit Performance Report</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- 5. ADMIN TARGETS VIEW -->
+      <section id="admin-view" class="view-panel">
+        <div class="card">
+          <div class="card-title">⚙️ Monthly & Daily Target Base Manager</div>
+          <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 2rem;">Upload targets for all branches via CSV files. A mock CSV structure must contain the standard headers.</p>
+
+          <div class="form-group" style="max-width: 480px; display: flex; gap: 1rem; align-items: flex-end;">
+            <div style="flex: 1;">
+              <label for="admin-target-date">Ingestion Target Date</label>
+              <input type="date" id="admin-target-date" class="form-input">
+            </div>
+            <button id="btn-download-template" class="btn btn-secondary" style="width: auto; height: 38px; margin-bottom: 0;">Download CSV Template</button>
+          </div>
+
+          <div class="upload-dropzone" id="dropzone-unified-targets" style="max-width: 600px; margin: 1.5rem 0;">
+            <div class="upload-icon">📤</div>
+            <p>Drag and drop the <strong>Unified target base CSV</strong> here or click to browse</p>
+            <input type="file" id="file-unified-targets" accept=".csv" style="display: none;">
+          </div>
+          <div id="status-upload-unified" style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 2rem;">No file loaded</div>
+
+          <div class="form-group" style="max-width: 240px; margin-top: 2rem;">
+            <label for="admin-passcode-field">Admin Authentication Passcode</label>
+            <input type="password" id="admin-passcode-field" class="form-input" placeholder="Required for spreadsheet updates">
+          </div>
+
+          <button id="btn-admin-submit" class="btn btn-primary" style="max-width: 200px; margin-top: 1rem;">Upload target changes</button>
+        </div>
+
+        <div class="card" style="margin-top: 1.5rem;">
+          <div class="card-title">👥 Master Data Manager</div>
+          <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem;">
+            Upload and update your master directory lists for branches and employee access profiles (e.g. 1st Line, 2nd Line, RO Guardians, LBOs, POs).
+          </p>
+          
+          <div class="form-grid-2">
+            <!-- Branch Master Ingestion -->
+            <div style="border-right: 1px solid var(--border-color); padding-right: 1.5rem;">
+              <h4 style="margin-bottom: 0.5rem; font-weight: 600;">1. Branch Directory Master</h4>
+              <button id="btn-download-branch-template" class="btn btn-secondary" style="width: auto; padding: 0.25rem 0.75rem; font-size: 0.75rem; margin-bottom: 1rem;">Download Template</button>
+              <div class="upload-dropzone" id="dropzone-master-branches">
+                <div class="upload-icon">📤</div>
+                <p>Drag and drop <strong>Branch Master CSV</strong></p>
+                <input type="file" id="file-master-branches" accept=".csv" style="display: none;">
+              </div>
+              <div id="status-upload-master-branches" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">No file loaded</div>
+            </div>
+
+            <!-- User Master Ingestion -->
+            <div style="padding-left: 0.5rem;">
+              <h4 style="margin-bottom: 0.5rem; font-weight: 600;">2. User Profiles Directory</h4>
+              <button id="btn-download-user-template" class="btn btn-secondary" style="width: auto; padding: 0.25rem 0.75rem; font-size: 0.75rem; margin-bottom: 1rem;">Download Template</button>
+              <div class="upload-dropzone" id="dropzone-master-users">
+                <div class="upload-icon">📤</div>
+                <p>Drag and drop <strong>User Master CSV</strong></p>
+                <input type="file" id="file-master-users" accept=".csv" style="display: none;">
+              </div>
+              <div id="status-upload-master-users" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">No file loaded</div>
+            </div>
+          </div>
+          
+          <button id="btn-master-submit" class="btn btn-primary" style="max-width: 200px; margin-top: 1.5rem;">Upload Master Data</button>
+        </div>
+
+        <div class="card" style="margin-top: 1.5rem;">
+          <div class="card-title">📋 Reporting Parameter Configurations</div>
+          <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem;">
+            Mark which daily metrics are visible and required for reporting under each employee access role.
+          </p>
+          <div style="overflow-x: auto; border: 1px solid var(--border-color); border-radius: 0.375rem; max-height: 400px; margin-bottom: 1rem;">
+            <table class="matrix-table" id="role-param-mapping-table" style="margin-bottom: 0;">
+              <thead>
+                <tr>
+                  <th>Parameter Name</th>
+                  <th>1st Line</th>
+                  <th>2nd Line</th>
+                  <th>RO Guardian</th>
+                  <th>Local Bank Officer (LBO)</th>
+                  <th>Probationary Officer (PO)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Populated dynamically via JS -->
+              </tbody>
+            </table>
+          </div>
+          <button id="btn-save-param-mapping" class="btn btn-primary" style="max-width: 250px;">Save Parameter Mapping</button>
+        </div>
+
+        <div class="card" style="margin-top: 1.5rem;">
+          <div class="card-title">🔑 User Password Management</div>
+          <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem;">
+            Reset any user's password back to their default password (their Roll Number).
+          </p>
+          <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+            <div class="form-group" style="margin-bottom: 0; min-width: 200px;">
+              <label for="reset-user-roll">User Roll Number</label>
+              <input type="text" id="reset-user-roll" class="form-input" placeholder="e.g. 1001" autocomplete="off">
+            </div>
+            <button id="btn-reset-password" class="btn btn-danger" style="width: auto; height: 38px; margin-bottom: 0;">Reset Password to Default</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 1.5rem;">
+          <div class="card-title">📢 Regional Office Broadcast Message</div>
+          <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem;">
+            Update the running ticker message displayed to all logged-in officers.
+          </p>
+          <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; width: 100%;">
+            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 300px;">
+              <label for="admin-ticker-input">Broadcast Message</label>
+              <input type="text" id="admin-ticker-input" class="form-input" placeholder="e.g. Focus on PMJJBY / PMSBY campaigns today. Verify target logs before 5 PM.">
+            </div>
+            <button id="btn-save-ticker" class="btn btn-primary" style="width: auto; height: 38px; margin-bottom: 0;">Update Ticker</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. SETTINGS VIEW -->
+      <section id="settings-view" class="view-panel">
+        <div class="card">
+          <div class="card-title">🔧 Integration Config</div>
+          <div class="form-group">
+            <label for="google-script-url">Google Apps Script Web App URL</label>
+            <input type="url" id="google-script-url" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
+            <span style="font-size: 0.75rem; color: var(--text-secondary);">This is the endpoint generated when you "Deploy as Web App" in your Google Sheet's Apps Script window.</span>
+          </div>
+
+          <div class="form-group" style="margin-top: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" id="toggle-mock-mode" style="width: 1.125rem; height: 1.125rem; accent-color: var(--primary-light);">
+              <span style="font-weight: 500;">Enable Mock Offline Mode (Skip Google Sheets Integration)</span>
+            </label>
+            <span style="font-size: 0.75rem; display: block; color: var(--text-secondary); margin-left: 1.625rem; margin-top: 0.25rem;">
+              Enabling this lets you demo the portal locally inside the browser with pre-loaded mock data (Roll 1001 = 1st line, 2001 = 2nd line, 3001 = RO Guardian, ADMIN = Admin/Manager).
+            </span>
+          </div>
+
+          <button id="btn-save-settings" class="btn btn-primary" style="max-width: 180px; margin-top: 1rem;">Save Settings</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Detailed Submission Popup Dialog -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-branch-title">SOL 1001 - Submission Details</h3>
+        <button id="modal-close-btn" class="btn btn-secondary" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.875rem;">✕</button>
+      </div>
+      <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;" id="modal-metadata-line">
+        Submitted by Roll 1001 (1st Line) on 20.07.2026 at 11:45
+      </div>
+      <div id="modal-body-content">
+        <!-- Renders list of parameters dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- First Login Change Password Modal -->
+  <div class="modal-overlay" id="change-password-modal">
+    <div class="modal-content" style="max-width: 400px; padding: 2rem;">
+      <div class="modal-header">
+        <h3>🔒 Reset Default Password</h3>
+      </div>
+      <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+        You are logging in with the default password. You must change it to continue.
+      </p>
+      <form id="change-password-form">
+        <div class="form-group" style="text-align: left;">
+          <label for="new-password">New Password</label>
+          <input type="password" id="new-password" class="form-input" placeholder="Min 6 characters" required autocomplete="off" minlength="6">
+        </div>
+        <div class="form-group" style="text-align: left;">
+          <label for="confirm-password">Confirm New Password</label>
+          <input type="password" id="confirm-password" class="form-input" placeholder="Repeat new password" required autocomplete="off" minlength="6">
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Change Password</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-bar" class="toast-msg">Action processed successfully</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
