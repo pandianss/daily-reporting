@@ -997,8 +997,9 @@ function setupFormHandlers() {
     // Resolve reporting SOL Details
     let solCode = "";
     let branchName = "";
+    const normRole = String(currentUser.role).trim().toUpperCase();
     
-    if (currentUser.role === "RO Guardian") {
+    if (normRole === "RO GUARDIAN") {
       solCode = document.getElementById("guardian-sol-select").value;
       const match = currentUser.branches.find(b => b.solCode === solCode);
       branchName = match ? match.branchName : "";
@@ -1025,7 +1026,8 @@ function setupFormHandlers() {
 
     // Serialize Form Fields dynamically based on role's parameter configuration
     const formData = new FormData(form);
-    const activeParams = roleParamMapping[currentUser.role] || [];
+    const matchedKey = Object.keys(roleParamMapping).find(k => k.trim().toUpperCase() === normRole);
+    const activeParams = roleParamMapping[currentUser.role] || roleParamMapping[matchedKey] || [];
     
     activeParams.forEach(paramKey => {
       const idOrNames = Object.keys(INPUT_TO_PARAM).filter(k => INPUT_TO_PARAM[k] === paramKey);
@@ -1070,7 +1072,7 @@ function setupFormHandlers() {
     });
 
     // Automatically calculate and append status parameters for 2nd Line submissions
-    if (currentUser.role === "2nd Line") {
+    if (normRole === "2ND LINE") {
       payload.statusSB = growthStatusVs31Mar("SB", 0);
       payload.statusCD = growthStatusVs31Mar("CD", 0);
       payload.statusTD = growthStatusVs31Mar("TD", 0);
@@ -1094,8 +1096,12 @@ function setupFormHandlers() {
       showToast("Report submitted successfully (Mock Offline)!");
       triggerSubmitNotification(solCode, currentUser.role);
       
-      // Update form configurations to original bases
-      setupReportingForm();
+      if (normRole === "RO GUARDIAN") {
+        const currentSol = document.getElementById("guardian-sol-select").value;
+        if (currentSol) loadBranchBases(currentSol);
+      } else {
+        setupReportingForm();
+      }
     } else {
       try {
         const response = await fetch(appSettings.scriptUrl, {
@@ -1109,7 +1115,13 @@ function setupFormHandlers() {
           updateGrowthStatusBadges();
           showToast("Performance report logged successfully in Google Sheets!");
           triggerSubmitNotification(solCode, currentUser.role);
-          setupReportingForm();
+          
+          if (normRole === "RO GUARDIAN") {
+            const currentSol = document.getElementById("guardian-sol-select").value;
+            if (currentSol) loadBranchBases(currentSol);
+          } else {
+            setupReportingForm();
+          }
         } else {
           showToast(result.error || "Submission failure.");
         }
