@@ -228,6 +228,16 @@ function normalizeSubmission(row) {
   return out;
 }
 
+function normalizeBranch(br) {
+  if (!br) return null;
+  return {
+    solCode: String(br.solCode || br["SOL Code"] || "").trim(),
+    branchName: br.branchName || br["Branch Name"] || "",
+    region: br.region || br["Region"] || "",
+    roGuardianRoll: String(br.roGuardianRoll || br["RO Guardian Roll"] || "").trim()
+  };
+}
+
 // Rows currently shown in the Submissions Log (already normalized); used by CSV export
 let lastReportRows = null;
 
@@ -652,6 +662,10 @@ document.getElementById("change-password-form").addEventListener("submit", async
 
 // Configure Portal UI elements based on roles
 function setupSessionUI() {
+  // Normalize branches on session startup
+  if (currentUser && currentUser.branches) {
+    currentUser.branches = currentUser.branches.map(normalizeBranch);
+  }
   document.getElementById("login-view").classList.remove("active");
   document.getElementById("user-info-bar").style.display = "flex";
   document.getElementById("main-navigation").style.display = "flex";
@@ -1243,7 +1257,7 @@ async function loadDashboardData() {
       const res = await fetch(`${appSettings.scriptUrl}?action=getDashboardData&rollNumber=${currentUser.rollNumber}`);
       const data = await res.json();
       if (data.success) {
-        branches = data.branches || [];
+        branches = (data.branches || []).map(normalizeBranch);
         submissions = (data.submissions || []).map(normalizeSubmission);
         if (data.roleParamMapping) {
           roleParamMapping = data.roleParamMapping;
