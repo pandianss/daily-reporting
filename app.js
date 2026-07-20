@@ -119,37 +119,37 @@ let mockSubmissions = [
 
 let mockDailyBase = {
   "1001": { targetAcctsOpened: 5, targetGrowthSB: 100000, targetGrowthCD: 50000, targetGrowthTD: 200000, allottedCasaWinback: 10, yestBalSB: 45200000, yestBalCD: 12800000, yestBalTD: 88500000,
-            uptoYestAcctsSB: 78, uptoYestAcctsCD: 24, currMonthDiamond: 6, currMonthPlatinum: 11, currMonthUltraHni: 1, currMonthPremium: 18 },
+            uptoYestAcctsSB: 78, uptoYestAcctsCD: 24, currMonthStepUpRD: 6, currMonthPlatinum: 11, currMonthUltraHni: 1, currMonthPremium: 18 },
   "1002": { targetAcctsOpened: 3, targetGrowthSB: 50000, targetGrowthCD: 20000, targetGrowthTD: 100000, allottedCasaWinback: 5, yestBalSB: 27400000, yestBalCD: 8100000, yestBalTD: 51200000,
-            uptoYestAcctsSB: 45, uptoYestAcctsCD: 13, currMonthDiamond: 3, currMonthPlatinum: 6, currMonthUltraHni: 0, currMonthPremium: 10 },
+            uptoYestAcctsSB: 45, uptoYestAcctsCD: 13, currMonthStepUpRD: 3, currMonthPlatinum: 6, currMonthUltraHni: 0, currMonthPremium: 10 },
   "1003": { targetAcctsOpened: 4, targetGrowthSB: 80000, targetGrowthCD: 40000, targetGrowthTD: 150000, allottedCasaWinback: 8, yestBalSB: 33600000, yestBalCD: 9700000, yestBalTD: 64800000,
-            uptoYestAcctsSB: 58, uptoYestAcctsCD: 17, currMonthDiamond: 4, currMonthPlatinum: 8, currMonthUltraHni: 1, currMonthPremium: 13 },
+            uptoYestAcctsSB: 58, uptoYestAcctsCD: 17, currMonthStepUpRD: 4, currMonthPlatinum: 8, currMonthUltraHni: 1, currMonthPremium: 13 },
   "1004": { targetAcctsOpened: 3, targetGrowthSB: 60000, targetGrowthCD: 30000, targetGrowthTD: 120000, allottedCasaWinback: 6, yestBalSB: 21900000, yestBalCD: 6400000, yestBalTD: 42700000,
-            uptoYestAcctsSB: 36, uptoYestAcctsCD: 10, currMonthDiamond: 2, currMonthPlatinum: 4, currMonthUltraHni: 0, currMonthPremium: 7 },
+            uptoYestAcctsSB: 36, uptoYestAcctsCD: 10, currMonthStepUpRD: 2, currMonthPlatinum: 4, currMonthUltraHni: 0, currMonthPremium: 7 },
   "1005": { targetAcctsOpened: 4, targetGrowthSB: 75000, targetGrowthCD: 35000, targetGrowthTD: 140000, allottedCasaWinback: 7, yestBalSB: 30100000, yestBalCD: 8800000, yestBalTD: 57300000,
-            uptoYestAcctsSB: 51, uptoYestAcctsCD: 15, currMonthDiamond: 3, currMonthPlatinum: 7, currMonthUltraHni: 0, currMonthPremium: 11 }
+            uptoYestAcctsSB: 51, uptoYestAcctsCD: 15, currMonthStepUpRD: 3, currMonthPlatinum: 7, currMonthUltraHni: 0, currMonthPremium: 11 }
 };
 
 let mockMonthlyBase = {
   "1001": { baseLowBalanceFunding: 15, baseLowBalSB: 120, baseLowBalCD: 45, bal31MarSB: 44100000, bal31MarCD: 12300000, bal31MarTD: 86200000,
-            targetAcctsSB: 120, targetAcctsCD: 40, fyDiamond: 22, fyPlatinum: 41, fyUltraHni: 3, fyPremium: 65,
-            prevMonthDiamond: 8, prevMonthPlatinum: 14, prevMonthUltraHni: 1, prevMonthPremium: 21,
+            targetAcctsSB: 120, targetAcctsCD: 40, fyStepUpRD: 22, fyPlatinum: 41, fyUltraHni: 3, fyPremium: 65,
+            prevMonthStepUpRD: 8, prevMonthPlatinum: 14, prevMonthUltraHni: 1, prevMonthPremium: 21,
             baseInoperativeAccts: 25, baseInoperativeAmt: 1850000, baseInactiveAccts: 20, baseInactiveAmt: 920000, baseDeafAccts: 5, baseDeafAmt: 210000 },
   "1002": { baseLowBalanceFunding: 10, baseLowBalSB: 85, baseLowBalCD: 30, bal31MarSB: 26800000, bal31MarCD: 7900000, bal31MarTD: 50100000,
-            targetAcctsSB: 70, targetAcctsCD: 25, fyDiamond: 12, fyPlatinum: 24, fyUltraHni: 1, fyPremium: 38,
-            prevMonthDiamond: 4, prevMonthPlatinum: 8, prevMonthUltraHni: 0, prevMonthPremium: 12,
+            targetAcctsSB: 70, targetAcctsCD: 25, fyStepUpRD: 12, fyPlatinum: 24, fyUltraHni: 1, fyPremium: 38,
+            prevMonthStepUpRD: 4, prevMonthPlatinum: 8, prevMonthUltraHni: 0, prevMonthPremium: 12,
             baseInoperativeAccts: 15, baseInoperativeAmt: 1120000, baseInactiveAccts: 12, baseInactiveAmt: 560000, baseDeafAccts: 3, baseDeafAmt: 130000 },
   "1003": { baseLowBalanceFunding: 12, baseLowBalSB: 95, baseLowBalCD: 38, bal31MarSB: 32900000, bal31MarCD: 9400000, bal31MarTD: 63500000,
-            targetAcctsSB: 90, targetAcctsCD: 30, fyDiamond: 16, fyPlatinum: 30, fyUltraHni: 2, fyPremium: 47,
-            prevMonthDiamond: 6, prevMonthPlatinum: 10, prevMonthUltraHni: 1, prevMonthPremium: 15,
+            targetAcctsSB: 90, targetAcctsCD: 30, fyStepUpRD: 16, fyPlatinum: 30, fyUltraHni: 2, fyPremium: 47,
+            prevMonthStepUpRD: 6, prevMonthPlatinum: 10, prevMonthUltraHni: 1, prevMonthPremium: 15,
             baseInoperativeAccts: 20, baseInoperativeAmt: 1430000, baseInactiveAccts: 15, baseInactiveAmt: 700000, baseDeafAccts: 4, baseDeafAmt: 160000 },
   "1004": { baseLowBalanceFunding: 8, baseLowBalSB: 60, baseLowBalCD: 22, bal31MarSB: 21400000, bal31MarCD: 6200000, bal31MarTD: 41800000,
-            targetAcctsSB: 55, targetAcctsCD: 18, fyDiamond: 9, fyPlatinum: 17, fyUltraHni: 1, fyPremium: 27,
-            prevMonthDiamond: 3, prevMonthPlatinum: 6, prevMonthUltraHni: 0, prevMonthPremium: 9,
+            targetAcctsSB: 55, targetAcctsCD: 18, fyStepUpRD: 9, fyPlatinum: 17, fyUltraHni: 1, fyPremium: 27,
+            prevMonthStepUpRD: 3, prevMonthPlatinum: 6, prevMonthUltraHni: 0, prevMonthPremium: 9,
             baseInoperativeAccts: 14, baseInoperativeAmt: 860000, baseInactiveAccts: 10, baseInactiveAmt: 420000, baseDeafAccts: 2, baseDeafAmt: 90000 },
   "1005": { baseLowBalanceFunding: 11, baseLowBalSB: 78, baseLowBalCD: 28, bal31MarSB: 29500000, bal31MarCD: 8500000, bal31MarTD: 56200000,
-            targetAcctsSB: 80, targetAcctsCD: 27, fyDiamond: 13, fyPlatinum: 26, fyUltraHni: 1, fyPremium: 41,
-            prevMonthDiamond: 5, prevMonthPlatinum: 9, prevMonthUltraHni: 0, prevMonthPremium: 13,
+            targetAcctsSB: 80, targetAcctsCD: 27, fyStepUpRD: 13, fyPlatinum: 26, fyUltraHni: 1, fyPremium: 41,
+            prevMonthStepUpRD: 5, prevMonthPlatinum: 9, prevMonthUltraHni: 0, prevMonthPremium: 13,
             baseInoperativeAccts: 18, baseInoperativeAmt: 1260000, baseInactiveAccts: 14, baseInactiveAmt: 610000, baseDeafAccts: 3, baseDeafAmt: 140000 }
 };
 
@@ -171,7 +171,7 @@ const SHEET_KEY_MAP = {
   "Growth_CD": "growthCD",
   "Growth_TD": "growthTD",
   "Accts_Opened": "acctsOpened",
-  "Accts_Diamond": "acctsDiamond",
+  "Accts_Step_Up_RD": "acctsStepUpRD",
   "Accts_Platinum": "acctsPlatinum",
   "Accts_Ultra_HNI": "acctsUltraHni",
   "Accts_Premium": "acctsPremium",
@@ -250,7 +250,7 @@ const BASE_KEY_MAP = {
   "Yesterday_Bal_TD": "yestBalTD",
   "UptoYest_Accts_SB": "uptoYestAcctsSB",
   "UptoYest_Accts_CD": "uptoYestAcctsCD",
-  "Curr_Month_Diamond": "currMonthDiamond",
+  "Curr_Month_Step_Up_RD": "currMonthStepUpRD",
   "Curr_Month_Platinum": "currMonthPlatinum",
   "Curr_Month_Ultra_HNI": "currMonthUltraHni",
   "Curr_Month_Premium": "currMonthPremium",
@@ -266,11 +266,11 @@ const BASE_KEY_MAP = {
   "Bal_31Mar_TD": "bal31MarTD",
   "Target_Accts_SB": "targetAcctsSB",
   "Target_Accts_CD": "targetAcctsCD",
-  "FY_Diamond": "fyDiamond",
+  "FY_Step_Up_RD": "fyStepUpRD",
   "FY_Platinum": "fyPlatinum",
   "FY_Ultra_HNI": "fyUltraHni",
   "FY_Premium": "fyPremium",
-  "Prev_Month_Diamond": "prevMonthDiamond",
+  "Prev_Month_Step_Up_RD": "prevMonthStepUpRD",
   "Prev_Month_Platinum": "prevMonthPlatinum",
   "Prev_Month_Ultra_HNI": "prevMonthUltraHni",
   "Prev_Month_Premium": "prevMonthPremium",
@@ -308,7 +308,7 @@ const PARAM_LIST = [
   { key: "acctsGovt", name: "Govt Accounts Opened" },
   { key: "acctsTemple", name: "Temple Accounts Opened" },
   { key: "acctsContractors", name: "Contractor Accounts Opened" },
-  { key: "acctsDiamond", name: "Adoption: SB Diamond" },
+  { key: "acctsStepUpRD", name: "Adoption: Step-up RD" },
   { key: "acctsPlatinum", name: "Adoption: SB Platinum" },
   { key: "acctsUltraHni", name: "Adoption: SB Ultra HNI" },
   { key: "acctsPremium", name: "Adoption: Premium" },
@@ -357,7 +357,7 @@ const INPUT_TO_PARAM = {
   "td-growth": "growthTD",
   "acctsOpenedSB": "acctsOpened",
   "acctsOpenedCD": "acctsOpened",
-  "acctsDiamond": "acctsDiamond",
+  "acctsStepUpRD": "acctsStepUpRD",
   "acctsPlatinum": "acctsPlatinum",
   "acctsUltraHni": "acctsUltraHni",
   "acctsPremium": "acctsPremium",
@@ -402,7 +402,7 @@ const INPUT_TO_PARAM = {
 };
 
 let roleParamMapping = {
-  "1st Line": ["fundingLowBal", "growthSB", "growthCD", "growthTD", "acctsOpened", "acctsDiamond", "acctsPlatinum", "acctsUltraHni", "acctsPremium", "acctsGovt", "acctsTemple", "acctsContractors", "creditCards", "iobConnect", "netBanking", "casaWinbackCompleted", "nps", "ssy", "ppf", "jewelLoansFresh", "jewelLoansRenewal", "accidentInsurance", "socialMediaCount", "activationInoperative", "activationInoperativeAmt", "activationInactive", "activationInactiveAmt", "activationDeaf", "activationDeafAmt", "loanHousing", "loanVehicle", "loanPersonal", "loanMSME", "loanAgri", "acctsOpenedTAB", "fastag", "pmsby", "pmjjby"],
+  "1st Line": ["fundingLowBal", "growthSB", "growthCD", "growthTD", "acctsOpened", "acctsStepUpRD", "acctsPlatinum", "acctsUltraHni", "acctsPremium", "acctsGovt", "acctsTemple", "acctsContractors", "creditCards", "iobConnect", "netBanking", "casaWinbackCompleted", "nps", "ssy", "ppf", "jewelLoansFresh", "jewelLoansRenewal", "accidentInsurance", "socialMediaCount", "activationInoperative", "activationInoperativeAmt", "activationInactive", "activationInactiveAmt", "activationDeaf", "activationDeafAmt", "loanHousing", "loanVehicle", "loanPersonal", "loanMSME", "loanAgri", "acctsOpenedTAB", "fastag", "pmsby", "pmjjby"],
   "2nd Line": ["reductionInoperative", "reductionInactive", "reductionDeaf", "rekycCompleted", "nominationUpdated", "dqiProgress", "powerplayIntent"],
   "RO Guardian": ["roCampaignsChecked", "roNotes"],
   "LBO": ["fundingLowBal", "loanMSME", "loanAgri", "pmsby", "pmjjby"],
@@ -932,7 +932,7 @@ function renderBranchBases(dBase, mBase) {
   document.getElementById("ao-gap-cd").textContent = Math.max(0, aoTargetCD - aoYestCD);
 
   // Premium product adoption references (FY / prev month from monthly, current month from daily)
-  [["Diamond", "diamond"], ["Platinum", "platinum"], ["UltraHni", "uhni"], ["Premium", "premium"]].forEach(([key, slug]) => {
+  [["StepUpRD", "stepuprd"], ["Platinum", "platinum"], ["UltraHni", "uhni"], ["Premium", "premium"]].forEach(([key, slug]) => {
     document.getElementById(`pa-fy-${slug}`).textContent = Number(mBase["fy" + key]) || 0;
     document.getElementById(`pa-prev-${slug}`).textContent = Number(mBase["prevMonth" + key]) || 0;
     document.getElementById(`pa-curr-${slug}`).textContent = Number(dBase["currMonth" + key]) || 0;
@@ -1779,7 +1779,7 @@ function parseUnifiedCSV(file, statusElement) {
         yestBalTD: Number(r["Yesterday_Bal_TD"]) || Number(r["yestBalTD"]) || 0,
         uptoYestAcctsSB: Number(r["UptoYest_Accts_SB"]) || Number(r["uptoYestAcctsSB"]) || 0,
         uptoYestAcctsCD: Number(r["UptoYest_Accts_CD"]) || Number(r["uptoYestAcctsCD"]) || 0,
-        currMonthDiamond: Number(r["Curr_Month_Diamond"]) || Number(r["currMonthDiamond"]) || 0,
+        currMonthStepUpRD: Number(r["Curr_Month_Step_Up_RD"]) || Number(r["currMonthStepUpRD"]) || 0,
         currMonthPlatinum: Number(r["Curr_Month_Platinum"]) || Number(r["currMonthPlatinum"]) || 0,
         currMonthUltraHni: Number(r["Curr_Month_Ultra_HNI"]) || Number(r["currMonthUltraHni"]) || 0,
         currMonthPremium: Number(r["Curr_Month_Premium"]) || Number(r["currMonthPremium"]) || 0,
@@ -1795,11 +1795,11 @@ function parseUnifiedCSV(file, statusElement) {
         bal31MarTD: Number(r["Bal_31Mar_TD"]) || Number(r["bal31MarTD"]) || 0,
         targetAcctsSB: Number(r["Target_Accts_SB"]) || Number(r["targetAcctsSB"]) || 0,
         targetAcctsCD: Number(r["Target_Accts_CD"]) || Number(r["targetAcctsCD"]) || 0,
-        fyDiamond: Number(r["FY_Diamond"]) || Number(r["fyDiamond"]) || 0,
+        fyStepUpRD: Number(r["FY_Step_Up_RD"]) || Number(r["fyStepUpRD"]) || 0,
         fyPlatinum: Number(r["FY_Platinum"]) || Number(r["fyPlatinum"]) || 0,
         fyUltraHni: Number(r["FY_Ultra_HNI"]) || Number(r["fyUltraHni"]) || 0,
         fyPremium: Number(r["FY_Premium"]) || Number(r["fyPremium"]) || 0,
-        prevMonthDiamond: Number(r["Prev_Month_Diamond"]) || Number(r["prevMonthDiamond"]) || 0,
+        prevMonthStepUpRD: Number(r["Prev_Month_Step_Up_RD"]) || Number(r["prevMonthStepUpRD"]) || 0,
         prevMonthPlatinum: Number(r["Prev_Month_Platinum"]) || Number(r["prevMonthPlatinum"]) || 0,
         prevMonthUltraHni: Number(r["Prev_Month_Ultra_HNI"]) || Number(r["prevMonthUltraHni"]) || 0,
         prevMonthPremium: Number(r["Prev_Month_Premium"]) || Number(r["prevMonthPremium"]) || 0,
@@ -1825,10 +1825,10 @@ function downloadCSVTemplate() {
   const headers = [
     "SOL Code", "Branch Name", "Target_Accts_Opened", "Target_Growth_SB", "Target_Growth_CD", "Target_Growth_TD",
     "Allotted_CASA_Winback", "Yesterday_Bal_SB", "Yesterday_Bal_CD", "Yesterday_Bal_TD", "UptoYest_Accts_SB", "UptoYest_Accts_CD",
-    "Curr_Month_Diamond", "Curr_Month_Platinum", "Curr_Month_Ultra_HNI", "Curr_Month_Premium", "Target_Credit_Cards",
+    "Curr_Month_Step_Up_RD", "Curr_Month_Platinum", "Curr_Month_Ultra_HNI", "Curr_Month_Premium", "Target_Credit_Cards",
     "Target_IOB_Connect", "Target_Net_Banking", "Target_Ongoing_Campaigns", "Base_Low_Balance_Funding", "Base_Low_Bal_SB",
     "Base_Low_Bal_CD", "Bal_31Mar_SB", "Bal_31Mar_CD", "Bal_31Mar_TD", "Target_Accts_SB", "Target_Accts_CD",
-    "FY_Diamond", "FY_Platinum", "FY_Ultra_HNI", "FY_Premium", "Prev_Month_Diamond", "Prev_Month_Platinum",
+    "FY_Step_Up_RD", "FY_Platinum", "FY_Ultra_HNI", "FY_Premium", "Prev_Month_Step_Up_RD", "Prev_Month_Platinum",
     "Prev_Month_Ultra_HNI", "Prev_Month_Premium", "Base_Inoperative_Accts", "Base_Inoperative_Amt",
     "Base_Inactive_Accts", "Base_Inactive_Amt", "Base_DEAF_Accts", "Base_DEAF_Amt"
   ];
