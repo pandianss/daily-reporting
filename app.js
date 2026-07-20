@@ -507,10 +507,10 @@ function switchView(viewId) {
 
   // Guard access: if logged in, prevent bypassing role permissions
   if (currentUser) {
-    const role = currentUser.role;
-    const hasReports = ["RO SRM", "Chief Manager", "Admin", "RO Guardian"].includes(role);
-    const hasEntry = ["1st Line", "2nd Line", "RO Guardian"].includes(role);
-    const isAdmin = role === "Admin";
+    const normRole = String(currentUser.role).trim().toUpperCase();
+    const hasReports = ["RO SRM", "CHIEF MANAGER", "ADMIN", "RO GUARDIAN"].includes(normRole);
+    const hasEntry = ["1ST LINE", "2ND LINE", "RO GUARDIAN"].includes(normRole);
+    const isAdmin = normRole === "ADMIN";
 
     if (viewId === "admin-view" && !isAdmin) {
       viewId = hasReports ? "dashboard-view" : "entry-view";
@@ -518,7 +518,7 @@ function switchView(viewId) {
     if (viewId === "settings-view" && !isAdmin) {
       viewId = hasReports ? "dashboard-view" : "entry-view";
     }
-    if (viewId === "guardian-landing-view" && role !== "RO Guardian") {
+    if (viewId === "guardian-landing-view" && normRole !== "RO GUARDIAN") {
       viewId = hasReports ? "dashboard-view" : "entry-view";
     }
     if (viewId === "reports-view" && !hasReports) {
@@ -727,9 +727,10 @@ document.getElementById("change-password-form").addEventListener("submit", async
 
 // Configure Portal UI elements based on roles
 function setupSessionUI() {
-  // Normalize branches on session startup
-  if (currentUser && currentUser.branches) {
-    currentUser.branches = currentUser.branches.map(normalizeBranch);
+  // Normalize branches on session startup to prevent undefined array crashes
+  if (currentUser) {
+    if (!currentUser.branches) currentUser.branches = [];
+    currentUser.branches = currentUser.branches.map(normalizeBranch).filter(Boolean);
   }
   document.getElementById("login-view").classList.remove("active");
   document.getElementById("user-info-bar").style.display = "flex";
@@ -748,11 +749,12 @@ function setupSessionUI() {
   document.getElementById("report-date-filter").value = todayStr;
   document.getElementById("admin-target-date").value = todayStr;
 
-  // Filter navigation buttons
-  const hasReports = ["RO SRM", "Chief Manager", "Admin", "RO Guardian"].includes(currentUser.role);
-  const hasEntry = ["1st Line", "2nd Line", "RO Guardian"].includes(currentUser.role);
-  const isAdmin = currentUser.role === "Admin";
-  const isGuardian = currentUser.role === "RO Guardian";
+  // Filter navigation buttons (case-insensitive and trimmed for robustness)
+  const normRole = String(currentUser.role).trim().toUpperCase();
+  const hasReports = ["RO SRM", "CHIEF MANAGER", "ADMIN", "RO GUARDIAN"].includes(normRole);
+  const hasEntry = ["1ST LINE", "2ND LINE", "RO GUARDIAN"].includes(normRole);
+  const isAdmin = normRole === "ADMIN";
+  const isGuardian = normRole === "RO GUARDIAN";
   
   const navReports = document.getElementById("nav-reports");
   const navAdmin = document.getElementById("nav-admin");
@@ -803,7 +805,7 @@ function setupReportingForm() {
   const branchHeading = document.getElementById("form-branch-heading");
   
   // Set heading and load bases
-  if (role === "RO Guardian") {
+  if (String(role).trim().toUpperCase() === "RO GUARDIAN") {
     branchHeading.textContent = "Guardian Multi-Branch Supervisor Review";
     
     // Only build the options list if it's empty to prevent resetting selection loops!
