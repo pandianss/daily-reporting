@@ -959,7 +959,7 @@ async function fetchDashboardTelemetry(solCode) {
   if (!appSettings.scriptUrl) return;
   try {
     const dateFilter = document.getElementById("form-date").value || getTodayDateString();
-    const res = await fetch(`${appSettings.scriptUrl}?action=getDashboardData&rollNumber=${currentUser.rollNumber}&dateFilter=${dateFilter}`);
+    const res = await fetch(`${appSettings.scriptUrl}?action=getDashboardData&rollNumber=${currentUser.rollNumber}&dateFilter=${dateFilter}&solCodeFilter=${solCode}`);
     const data = await res.json();
     if (data.success) {
       let dBase = (data.dailyBase && data.dailyBase[solCode]) || {};
