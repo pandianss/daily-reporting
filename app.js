@@ -847,14 +847,23 @@ function setupReportingForm() {
     }
   });
 
-  // 2. Hide/Show parent cards if all their child elements are hidden
+  // 2. Hide/Show parent cards
   const cards = document.querySelectorAll("#reporting-form .card");
+  const isGuardianUser = currentUser && String(currentUser.role).trim().toUpperCase() === "RO GUARDIAN";
+
   cards.forEach(card => {
     // If the card is the submit panel, keep it visible!
     if (card.querySelector(".btn-submit-form")) {
       card.style.display = "";
       return;
     }
+    
+    // If the card is marked as reference data, show it to RO Guardians
+    if (isGuardianUser && card.hasAttribute("data-reference-card")) {
+      card.style.display = "";
+      return;
+    }
+
     const params = card.querySelectorAll("[data-param]");
     if (params.length > 0) {
       let hasVisible = false;
