@@ -432,12 +432,51 @@ function setupNavigation() {
 }
 
 function switchView(viewId) {
+  // Guard access: if not logged in, force login view
+  if (!currentUser && viewId !== "login-view") {
+    viewId = "login-view";
+  }
+
+  // Guard access: if logged in, prevent bypassing role permissions
+  if (currentUser) {
+    const role = currentUser.role;
+    const hasReports = ["RO SRM", "Chief Manager", "Admin", "RO Guardian"].includes(role);
+    const hasEntry = ["1st Line", "2nd Line", "RO Guardian"].includes(role);
+    const isAdmin = role === "Admin";
+
+    if (viewId === "admin-view" && !isAdmin) {
+      viewId = hasReports ? "dashboard-view" : "entry-view";
+    }
+    if (viewId === "settings-view" && !isAdmin) {
+      viewId = hasReports ? "dashboard-view" : "entry-view";
+    }
+    if (viewId === "reports-view" && !hasReports) {
+      viewId = "entry-view";
+    }
+    if (viewId === "dashboard-view" && !hasReports) {
+      viewId = "entry-view";
+    }
+    if (viewId === "entry-view" && !hasEntry) {
+      viewId = "dashboard-view";
+    }
+  }
+
   const panels = document.querySelectorAll(".view-panel");
   panels.forEach(p => p.classList.remove("active"));
   
   const targetPanel = document.getElementById(viewId);
   if (targetPanel) {
     targetPanel.classList.add("active");
+    
+    // Highlight matching navigation tab dynamically
+    const tabs = document.querySelectorAll(".nav-tab");
+    tabs.forEach(t => {
+      if (t.getAttribute("data-target") === viewId) {
+        t.classList.add("active");
+      } else {
+        t.classList.remove("active");
+      }
+    });
     
     // View-specific loading hooks
     if (viewId === "dashboard-view") {
