@@ -3,8 +3,9 @@
 // State Management
 let currentUser = null;
 let appSettings = {
-  scriptUrl: "",
-  mockMode: true // Enabled by default for testing
+  // Hardcode your Google Apps Script Web App URL here to make it automatically live for all devices (mobile/desktop):
+  scriptUrl: "", 
+  mockMode: false // Set to false by default for live sheets connection
 };
 
 // Simulated Local Database for Mock Mode
@@ -454,7 +455,11 @@ document.addEventListener("DOMContentLoaded", () => {
 function loadSettings() {
   const cachedSettings = localStorage.getItem("iob_portal_settings");
   if (cachedSettings) {
-    appSettings = JSON.parse(cachedSettings);
+    const parsed = JSON.parse(cachedSettings);
+    if (parsed.scriptUrl) {
+      appSettings.scriptUrl = parsed.scriptUrl;
+    }
+    appSettings.mockMode = parsed.mockMode;
   }
   
   // Set in configuration inputs
