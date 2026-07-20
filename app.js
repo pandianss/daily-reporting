@@ -794,17 +794,19 @@ function setupReportingForm() {
   if (role === "RO Guardian") {
     branchHeading.textContent = "Guardian Multi-Branch Supervisor Review";
     
-    // Clear and build SOL list for selection
-    solSelect.innerHTML = "";
-    currentUser.branches.forEach(br => {
-      const opt = document.createElement("option");
-      opt.value = br.solCode;
-      opt.textContent = `${br.solCode} - ${br.branchName}`;
-      solSelect.appendChild(opt);
-    });
+    // Only build the options list if it's empty to prevent resetting selection loops!
+    if (solSelect.children.length === 0) {
+      solSelect.innerHTML = "";
+      currentUser.branches.forEach(br => {
+        const opt = document.createElement("option");
+        opt.value = br.solCode;
+        opt.textContent = `${br.solCode} - ${br.branchName}`;
+        solSelect.appendChild(opt);
+      });
 
-    if (currentUser.branches.length > 0) {
-      loadBranchBases(currentUser.branches[0].solCode);
+      if (currentUser.branches.length > 0) {
+        loadBranchBases(currentUser.branches[0].solCode);
+      }
     }
   } else {
     const sol = currentUser.branches[0] || { solCode: "???", branchName: "Unknown Branch" };
@@ -2071,6 +2073,9 @@ function logout() {
   document.getElementById("main-navigation").style.display = "none";
   document.getElementById("admin-ticker-bar").style.display = "none";
   document.getElementById("login-roll").value = "";
+  
+  const solSelect = document.getElementById("guardian-sol-select");
+  if (solSelect) solSelect.innerHTML = "";
   
   switchView("login-view");
   showToast("Logged out successfully.");
