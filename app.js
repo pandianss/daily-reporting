@@ -857,7 +857,8 @@ function renderBranchBases(dBase, mBase) {
 async function fetchDashboardTelemetry(solCode) {
   if (!appSettings.scriptUrl) return;
   try {
-    const res = await fetch(`${appSettings.scriptUrl}?action=getDashboardData&rollNumber=${currentUser.rollNumber}`);
+    const dateFilter = document.getElementById("form-date").value || getTodayDateString();
+    const res = await fetch(`${appSettings.scriptUrl}?action=getDashboardData&rollNumber=${currentUser.rollNumber}&dateFilter=${dateFilter}`);
     const data = await res.json();
     if (data.success) {
       const dBase = (data.dailyBase && data.dailyBase[solCode]) || {};
@@ -1007,6 +1008,19 @@ function setupFormHandlers() {
   // Guardian branch selector refreshes that branch's bases
   document.getElementById("guardian-sol-select").addEventListener("change", (e) => {
     loadBranchBases(e.target.value);
+  });
+
+  // Form date selector refreshes bases for that selected date
+  document.getElementById("form-date").addEventListener("change", () => {
+    let solCode = "";
+    if (currentUser.role === "RO Guardian") {
+      solCode = document.getElementById("guardian-sol-select").value;
+    } else if (currentUser.branches && currentUser.branches[0]) {
+      solCode = currentUser.branches[0].solCode;
+    }
+    if (solCode) {
+      loadBranchBases(solCode);
+    }
   });
 
   // Live auto-status badges for the balance growth grid
