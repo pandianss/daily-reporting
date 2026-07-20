@@ -4,7 +4,7 @@
 let currentUser = null;
 let appSettings = {
   // Hardcode your Google Apps Script Web App URL here to make it automatically live for all devices (mobile/desktop):
-  scriptUrl: "https://script.google.com/macros/s/AKfycbx-yuR65ayhY9BD449xHxTN-YvphR1hLF4nlak4TAQ0UKQHa_ieQMzOlEdAl_a-VFTpVQ/exec", 
+  scriptUrl: "https://script.google.com/macros/s/AKfycbxLkY22tJA8ryrUzrd055KIDkHGsh0EUTGXN7QFTO_wWOpVoFWHggP7dEX7UwsghXLgKA/exec",
   mockMode: false // Set to false by default for live sheets connection
 };
 
