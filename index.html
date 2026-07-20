@@ -616,11 +616,6 @@
           </div>
           <div id="status-upload-unified" style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 2rem;">No file loaded</div>
 
-          <div class="form-group" style="max-width: 240px; margin-top: 2rem;">
-            <label for="admin-passcode-field">Admin Authentication Passcode</label>
-            <input type="password" id="admin-passcode-field" class="form-input" placeholder="Required for spreadsheet updates">
-          </div>
-
           <button id="btn-admin-submit" class="btn btn-primary" style="max-width: 200px; margin-top: 1rem;">Upload target changes</button>
         </div>
 
@@ -767,11 +762,11 @@
       <form id="change-password-form">
         <div class="form-group" style="text-align: left;">
           <label for="new-password">New Password</label>
-          <input type="password" id="new-password" class="form-input" placeholder="Min 6 characters" required autocomplete="off" minlength="6">
+          <input type="password" id="new-password" class="form-input" placeholder="Min 8 characters" required autocomplete="off" minlength="8">
         </div>
         <div class="form-group" style="text-align: left;">
           <label for="confirm-password">Confirm New Password</label>
-          <input type="password" id="confirm-password" class="form-input" placeholder="Repeat new password" required autocomplete="off" minlength="6">
+          <input type="password" id="confirm-password" class="form-input" placeholder="Repeat new password" required autocomplete="off" minlength="8">
         </div>
         <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Change Password</button>
       </form>

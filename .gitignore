@@ -1,0 +1,4 @@
+# Never commit credential/PII files
+Daily_Reporting - Users.csv
+*Users*.csv
+.claude/

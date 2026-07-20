@@ -8,8 +8,39 @@ let appSettings = {
   mockMode: false // Set to false by default for live sheets connection
 };
 
+// --- Session handling (live mode uses a server-issued token; mock mode has no token) ---
+const SESSION_DURATION_MS = 6 * 60 * 60 * 1000; // matches the backend's 6h token TTL
+let sessionToken = null;
+
+function saveSession(token, user) {
+  sessionToken = token || null;
+  currentUser = user;
+  localStorage.setItem("iob_user_session", JSON.stringify({
+    token: sessionToken,
+    user: user,
+    expiresAt: Date.now() + SESSION_DURATION_MS
+  }));
+}
+
+function handleSessionExpired() {
+  logout();
+  showToast("Your session has expired. Please log in again.");
+}
+
+// All live backend calls go through here: POST-only, token attached, AUTH errors force re-login
+async function apiPost(payload, opts = {}) {
+  if (!opts.noAuth) payload.token = sessionToken;
+  const res = await fetch(appSettings.scriptUrl, { method: "POST", body: JSON.stringify(payload) });
+  const result = await res.json();
+  if (result && result.errorCode === "AUTH") {
+    handleSessionExpired();
+    throw new Error(result.error || "Session expired");
+  }
+  return result;
+}
+
 // Simulated Local Database for Mock Mode
-const mockBranches = [
+let mockBranches = [
   { solCode: "1001", branchName: "IOB Cathedral Branch", region: "Chennai South", roGuardianRoll: "3001" },
   { solCode: "1002", branchName: "IOB Mount Road Branch", region: "Chennai South", roGuardianRoll: "3001" },
   { solCode: "1003", branchName: "IOB T-Nagar Branch", region: "Chennai South", roGuardianRoll: "3001" },
@@ -564,14 +595,33 @@ function switchView(viewId) {
 }
 
 let pendingSessionData = null; // Cache session during password change
+let pendingOldPassword = null; // The password used at login; required by the backend to change it
 
 // Check session cache
 function checkCachedSession() {
-  const cachedUser = localStorage.getItem("iob_user_session");
-  if (cachedUser) {
-    currentUser = JSON.parse(cachedUser);
+  try {
+    const cached = localStorage.getItem("iob_user_session");
+    if (!cached) {
+      switchView("login-view");
+      return;
+    }
+    const parsed = JSON.parse(cached);
+    const user = parsed.user || parsed; // legacy sessions stored the bare user object
+    const expired = parsed.expiresAt ? Date.now() > parsed.expiresAt : true;
+    const hasToken = !!parsed.token;
+
+    // Live mode requires a fresh token; legacy/expired sessions must log in again
+    if (expired || (!appSettings.mockMode && !hasToken)) {
+      localStorage.removeItem("iob_user_session");
+      switchView("login-view");
+      return;
+    }
+    currentUser = user;
+    sessionToken = parsed.token || null;
     setupSessionUI();
-  } else {
+  } catch (e) {
+    console.error("Corrupt session cache", e);
+    localStorage.removeItem("iob_user_session");
     switchView("login-view");
   }
 }
@@ -590,9 +640,9 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
     const key = rollNumber.toUpperCase();
     const user = mockUsers[key];
     if (user) {
-      // Validate password
+      // Validate password (mock-only demo credentials, not real ones)
       let mockPasswords = JSON.parse(localStorage.getItem("iob_mock_passwords") || "{}");
-      const defaultPassword = (user.role === "Admin") ? "a3130gsm" : rollNumber;
+      const defaultPassword = (user.role === "Admin") ? "admin123" : rollNumber;
       const currentPassword = mockPasswords[rollNumber] || defaultPassword;
       
       if (password !== currentPassword) {
@@ -623,33 +673,32 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
       // Check first login password change constraint (except admin)
       const isDefault = (password === rollNumber && user.role !== "Admin");
       if (isDefault) {
+        pendingOldPassword = password;
         showChangePasswordModal(userRecord);
         return;
       }
-      
-      currentUser = userRecord;
-      localStorage.setItem("iob_user_session", JSON.stringify(currentUser));
+
+      saveSession(null, userRecord);
       setupSessionUI();
       showToast(`Welcome back, ${currentUser.name}!`);
     } else {
       showToast("Invalid roll number (Mock list: 1001, 2001, 3001, 9001, CHIEF, ADMIN)");
     }
   } else {
-    // API authenticate
+    // API authenticate: POST so credentials never appear in URLs or server logs
     if (!appSettings.scriptUrl) {
       showToast("Web App URL configuration is missing in Settings!");
       return;
     }
     try {
-      const response = await fetch(`${appSettings.scriptUrl}?action=authenticate&rollNumber=${encodeURIComponent(rollNumber)}&password=${encodeURIComponent(password)}`);
-      const result = await response.json();
+      const result = await apiPost({ action: "login", rollNumber: rollNumber, password: password }, { noAuth: true });
       if (result.success) {
         if (result.mustChangePassword) {
+          pendingOldPassword = password;
           showChangePasswordModal(result.user);
           return;
         }
-        currentUser = result.user;
-        localStorage.setItem("iob_user_session", JSON.stringify(currentUser));
+        saveSession(result.token, result.user);
         setupSessionUI();
         showToast(`Welcome back, ${currentUser.name}!`);
       } else {
@@ -671,46 +720,44 @@ document.getElementById("change-password-form").addEventListener("submit", async
   e.preventDefault();
   const newPass = document.getElementById("new-password").value;
   const confirmPass = document.getElementById("confirm-password").value;
-  
-  if (newPass.length < 6) {
-    showToast("Password must be at least 6 characters long.");
+
+  if (newPass.length < 8) {
+    showToast("Password must be at least 8 characters long.");
     return;
   }
-  
+
   if (newPass !== confirmPass) {
     showToast("Passwords do not match!");
     return;
   }
-  
+
   showToast("Updating password...");
-  
+
   if (appSettings.mockMode) {
     let mockPasswords = JSON.parse(localStorage.getItem("iob_mock_passwords") || "{}");
     mockPasswords[pendingSessionData.rollNumber] = newPass;
     localStorage.setItem("iob_mock_passwords", JSON.stringify(mockPasswords));
-    
-    currentUser = pendingSessionData;
-    localStorage.setItem("iob_user_session", JSON.stringify(currentUser));
-    
+
+    saveSession(null, pendingSessionData);
+    pendingOldPassword = null;
+
     document.getElementById("change-password-modal").classList.remove("open");
     setupSessionUI();
     showToast("Password changed successfully! You are logged in.");
     document.getElementById("change-password-form").reset();
   } else {
     try {
-      const response = await fetch(appSettings.scriptUrl, {
-        method: "POST",
-        body: JSON.stringify({
-          action: "changePassword",
-          rollNumber: pendingSessionData.rollNumber,
-          newPassword: newPass
-        })
-      });
-      const result = await response.json();
+      // The backend verifies the current password and returns a fresh session token
+      const result = await apiPost({
+        action: "changePassword",
+        rollNumber: pendingSessionData.rollNumber,
+        oldPassword: pendingOldPassword,
+        newPassword: newPass
+      }, { noAuth: true });
       if (result.success) {
-        currentUser = pendingSessionData;
-        localStorage.setItem("iob_user_session", JSON.stringify(currentUser));
-        
+        saveSession(result.token, result.user || pendingSessionData);
+        pendingOldPassword = null;
+
         document.getElementById("change-password-modal").classList.remove("open");
         setupSessionUI();
         showToast("Password changed successfully! You are logged in.");
@@ -959,8 +1006,7 @@ async function fetchDashboardTelemetry(solCode) {
   if (!appSettings.scriptUrl) return;
   try {
     const dateFilter = document.getElementById("form-date").value || getTodayDateString();
-    const res = await fetch(`${appSettings.scriptUrl}?action=getDashboardData&rollNumber=${currentUser.rollNumber}&dateFilter=${dateFilter}&solCodeFilter=${solCode}`);
-    const data = await res.json();
+    const data = await apiPost({ action: "getDashboardData", dateFilter: dateFilter, solCodeFilter: solCode });
     if (data.success) {
       let dBase = (data.dailyBase && data.dailyBase[solCode]) || {};
       let mBase = (data.monthlyBase && data.monthlyBase[solCode]) || {};
@@ -1104,16 +1150,14 @@ function setupFormHandlers() {
       }
     } else {
       try {
-        const response = await fetch(appSettings.scriptUrl, {
-          method: "POST",
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
+        const result = await apiPost(payload);
         if (result.success) {
           form.reset();
           document.getElementById("form-date").value = getTodayDateString();
           updateGrowthStatusBadges();
-          showToast("Performance report logged successfully in Google Sheets!");
+          showToast(result.updated
+            ? "Existing report for this date was updated in Google Sheets!"
+            : "Performance report logged successfully in Google Sheets!");
           triggerSubmitNotification(solCode, currentUser.role);
           
           if (normRole === "RO GUARDIAN") {
@@ -1234,22 +1278,11 @@ function setupFormHandlers() {
       showToast(`Password for Roll ${targetRoll} has been reset to default (${targetRoll})!`);
       document.getElementById("reset-user-roll").value = "";
     } else {
-      const passcode = document.getElementById("admin-passcode-field").value;
-      if (!passcode) {
-        showToast("Admin passcode is required in the targets panel above to reset user passwords.");
-        return;
-      }
       try {
-        const response = await fetch(appSettings.scriptUrl, {
-          method: "POST",
-          body: JSON.stringify({
-            action: "resetUserPassword",
-            rollNumber: currentUser.rollNumber,
-            passcode: passcode,
-            targetRollNumber: targetRoll
-          })
+        const result = await apiPost({
+          action: "resetUserPassword",
+          targetRollNumber: targetRoll
         });
-        const result = await response.json();
         if (result.success) {
           showToast(`Password for Roll ${targetRoll} has been reset to default successfully!`);
           document.getElementById("reset-user-roll").value = "";
@@ -1267,12 +1300,6 @@ function setupFormHandlers() {
   const btnSaveMapping = document.getElementById("btn-save-param-mapping");
   if (btnSaveMapping) {
     btnSaveMapping.addEventListener("click", async () => {
-      const passcode = document.getElementById("admin-passcode-field").value;
-      if (!passcode) {
-        showToast("Admin passcode is required to save mapping changes!");
-        return;
-      }
-      
       showToast("Saving parameter mapping...");
       
       // Rebuild the role parameter mapping from checkboxes
@@ -1304,16 +1331,10 @@ function setupFormHandlers() {
           return;
         }
         try {
-          const response = await fetch(appSettings.scriptUrl, {
-            method: "POST",
-            body: JSON.stringify({
-              action: "saveRoleParamMapping",
-              passcode: passcode,
-              rollNumber: currentUser.rollNumber,
-              mapping: roleParamMapping
-            })
+          const result = await apiPost({
+            action: "saveRoleParamMapping",
+            mapping: roleParamMapping
           });
-          const result = await response.json();
           if (result.success) {
             showToast("Parameter mapping saved successfully to Google Sheets!");
           } else {
@@ -1331,12 +1352,6 @@ function setupFormHandlers() {
   const btnSaveTicker = document.getElementById("btn-save-ticker");
   if (btnSaveTicker) {
     btnSaveTicker.addEventListener("click", async () => {
-      const passcode = document.getElementById("admin-passcode-field").value;
-      if (!passcode) {
-        showToast("Admin passcode is required to update broadcast message!");
-        return;
-      }
-      
       const text = document.getElementById("admin-ticker-input").value.trim();
       if (!text) {
         showToast("Broadcast message cannot be empty!");
@@ -1359,16 +1374,10 @@ function setupFormHandlers() {
           return;
         }
         try {
-          const response = await fetch(appSettings.scriptUrl, {
-            method: "POST",
-            body: JSON.stringify({
-              action: "saveTickerMessage",
-              passcode: passcode,
-              rollNumber: currentUser.rollNumber,
-              message: roBroadcastMessage
-            })
+          const result = await apiPost({
+            action: "saveTickerMessage",
+            message: roBroadcastMessage
           });
-          const result = await response.json();
           if (result.success) {
             showToast("Broadcast message successfully pushed to Google Sheet!");
           } else {
@@ -1403,8 +1412,7 @@ async function loadDashboardData() {
   } else {
     if (!appSettings.scriptUrl) return;
     try {
-      const res = await fetch(`${appSettings.scriptUrl}?action=getDashboardData&rollNumber=${currentUser.rollNumber}`);
-      const data = await res.json();
+      const data = await apiPost({ action: "getDashboardData" });
       if (data.success) {
         branches = (data.branches || []).map(normalizeBranch);
         submissions = (data.submissions || []).map(normalizeSubmission);
@@ -1511,8 +1519,7 @@ async function loadReportsData() {
   } else {
     if (!appSettings.scriptUrl) return;
     try {
-      const res = await fetch(`${appSettings.scriptUrl}?action=getDashboardData&rollNumber=${currentUser.rollNumber}&dateFilter=${dateFilter}`);
-      const data = await res.json();
+      const data = await apiPost({ action: "getDashboardData", dateFilter: dateFilter });
       if (data.success && data.isManagementView) {
         rows = (data.submissions || []).map(normalizeSubmission);
         if (data.roleParamMapping) {
@@ -1858,12 +1865,7 @@ function downloadCSVTemplate() {
 
 // Upload CSV figures to Sheets API
 async function submitUnifiedTargets() {
-  const passcode = document.getElementById("admin-passcode-field").value;
   const targetDate = document.getElementById("admin-target-date").value;
-  if (!passcode) {
-    showToast("Admin passcode is required!");
-    return;
-  }
   if (!targetDate) {
     showToast("Target date is required!");
     return;
@@ -1892,19 +1894,11 @@ async function submitUnifiedTargets() {
     }
     
     try {
-      const payload = {
+      const result = await apiPost({
         action: "uploadBaseTargets",
-        passcode: passcode,
-        rollNumber: currentUser.rollNumber,
         date: targetDate,
         rows: uploadedUnifiedRows
-      };
-      
-      const res = await fetch(appSettings.scriptUrl, {
-        method: "POST",
-        body: JSON.stringify(payload)
       });
-      const result = await res.json();
       if (result.success) {
         showToast("Targets successfully uploaded to Google Sheets!");
         uploadedUnifiedRows = [];
@@ -2047,12 +2041,6 @@ function downloadMasterUserTemplate() {
 }
 
 async function submitMasterData() {
-  const passcode = document.getElementById("admin-passcode-field").value;
-  if (!passcode) {
-    showToast("Admin passcode is required!");
-    return;
-  }
-
   if (uploadedMasterBranches.length === 0 && uploadedMasterUsers.length === 0) {
     showToast("No master data files loaded to upload!");
     return;
@@ -2066,7 +2054,11 @@ async function submitMasterData() {
     }
     if (uploadedMasterUsers.length > 0) {
       uploadedMasterUsers.forEach(u => {
-        mockUsers[u.rollNumber.toUpperCase()] = u;
+        // Store assignedSols as an array so scope checks are exact (not substring) matches
+        mockUsers[u.rollNumber.toUpperCase()] = {
+          ...u,
+          assignedSols: String(u.assignedSols || "").split(",").map(s => s.trim()).filter(String)
+        };
       });
     }
     showToast("Master directory updated in local mock session!");
@@ -2080,18 +2072,11 @@ async function submitMasterData() {
       return;
     }
     try {
-      const payload = {
+      const result = await apiPost({
         action: "uploadMasterData",
-        passcode: passcode,
-        rollNumber: currentUser.rollNumber,
         branches: uploadedMasterBranches,
         users: uploadedMasterUsers
-      };
-      const res = await fetch(appSettings.scriptUrl, {
-        method: "POST",
-        body: JSON.stringify(payload)
       });
-      const result = await res.json();
       if (result.success) {
         showToast("Master directory updated successfully in Google Sheet!");
         uploadedMasterBranches = [];
@@ -2110,7 +2095,12 @@ async function submitMasterData() {
 
 // Logouts
 function logout() {
+  // Best-effort server-side token invalidation before clearing local state
+  if (!appSettings.mockMode && sessionToken && appSettings.scriptUrl) {
+    fetch(appSettings.scriptUrl, { method: "POST", body: JSON.stringify({ action: "logout", token: sessionToken }) }).catch(() => {});
+  }
   currentUser = null;
+  sessionToken = null;
   localStorage.removeItem("iob_user_session");
   document.getElementById("user-info-bar").style.display = "none";
   document.getElementById("main-navigation").style.display = "none";
@@ -2274,8 +2264,7 @@ async function loadGuardianLandingPage() {
   } else {
     if (!appSettings.scriptUrl) return;
     try {
-      const res = await fetch(`${appSettings.scriptUrl}?action=getDashboardData&rollNumber=${currentUser.rollNumber}`);
-      const data = await res.json();
+      const data = await apiPost({ action: "getDashboardData" });
       if (data.success) {
         submissions = (data.submissions || []).map(normalizeSubmission);
       }
@@ -2315,15 +2304,15 @@ async function loadGuardianLandingPage() {
           🏦 ${escapeHtml(br.solCode)} - ${escapeHtml(br.branchName)}
         </div>
         <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem;">
-          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${sub1st ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.05)'}; color: ${sub1st ? 'var(--success-color)' : 'var(--text-secondary)'}; font-weight: 500;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${sub1st ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.05)'}; color: ${sub1st ? 'var(--success)' : 'var(--text-secondary)'}; font-weight: 500;">
             <span>1st Line Entry</span>
             <span>${sub1st ? '✓ Submitted' : '✗ Pending'}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${sub2nd ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.05)'}; color: ${sub2nd ? 'var(--success-color)' : 'var(--text-secondary)'}; font-weight: 500;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${sub2nd ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.05)'}; color: ${sub2nd ? 'var(--success)' : 'var(--text-secondary)'}; font-weight: 500;">
             <span>2nd Line Entry</span>
             <span>${sub2nd ? '✓ Submitted' : '✗ Pending'}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${subRO ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.05)'}; color: ${subRO ? 'var(--success-color)' : 'var(--text-secondary)'}; font-weight: 500;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${subRO ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.05)'}; color: ${subRO ? 'var(--success)' : 'var(--text-secondary)'}; font-weight: 500;">
             <span>Your Audit Report</span>
             <span>${subRO ? '✓ Completed' : '✗ Pending'}</span>
           </div>
