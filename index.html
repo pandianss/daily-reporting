@@ -434,53 +434,28 @@
             <!-- SB, CD, CASA, TD overall Status Selection -->
             <div class="card">
               <div class="card-title">⚖️ EOD Status & Systems Balance check</div>
+              <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem;">
+                Automatic system status checks comparing yesterday's outstanding balance with the March 31 base.
+              </p>
               <div class="form-grid-2">
                 <div class="form-group">
                   <label>Overall SB Segment Status</label>
-                  <div class="status-radio-group">
-                    <input type="radio" id="2nd-sb-pos" name="statusSB2nd" value="Positive" checked>
-                    <label for="2nd-sb-pos" class="status-radio-label">Positive</label>
-                    <input type="radio" id="2nd-sb-neg" name="statusSB2nd" value="Negative">
-                    <label for="2nd-sb-neg" class="status-radio-label">Negative</label>
-                    <input type="radio" id="2nd-sb-ach" name="statusSB2nd" value="Achieved">
-                    <label for="2nd-sb-ach" class="status-radio-label">Achieved</label>
-                  </div>
+                  <div><span id="2nd-status-sb" class="badge badge-neutral">—</span></div>
                 </div>
 
                 <div class="form-group">
                   <label>Overall CD Segment Status</label>
-                  <div class="status-radio-group">
-                    <input type="radio" id="2nd-cd-pos" name="statusCD2nd" value="Positive" checked>
-                    <label for="2nd-cd-pos" class="status-radio-label">Positive</label>
-                    <input type="radio" id="2nd-cd-neg" name="statusCD2nd" value="Negative">
-                    <label for="2nd-cd-neg" class="status-radio-label">Negative</label>
-                    <input type="radio" id="2nd-cd-ach" name="statusCD2nd" value="Achieved">
-                    <label for="2nd-cd-ach" class="status-radio-label">Achieved</label>
-                  </div>
+                  <div><span id="2nd-status-cd" class="badge badge-neutral">—</span></div>
                 </div>
 
                 <div class="form-group">
                   <label>Overall CASA Status</label>
-                  <div class="status-radio-group">
-                    <input type="radio" id="2nd-casa-pos" name="statusCASA2nd" value="Positive" checked>
-                    <label for="2nd-casa-pos" class="status-radio-label">Positive</label>
-                    <input type="radio" id="2nd-casa-neg" name="statusCASA2nd" value="Negative">
-                    <label for="2nd-casa-neg" class="status-radio-label">Negative</label>
-                    <input type="radio" id="2nd-casa-ach" name="statusCASA2nd" value="Achieved">
-                    <label for="2nd-casa-ach" class="status-radio-label">Achieved</label>
-                  </div>
+                  <div><span id="2nd-status-casa" class="badge badge-neutral">—</span></div>
                 </div>
 
                 <div class="form-group">
                   <label>Overall TD Status</label>
-                  <div class="status-radio-group">
-                    <input type="radio" id="2nd-td-pos" name="statusTD2nd" value="Positive" checked>
-                    <label for="2nd-td-pos" class="status-radio-label">Positive</label>
-                    <input type="radio" id="2nd-td-neg" name="statusTD2nd" value="Negative">
-                    <label for="2nd-td-neg" class="status-radio-label">Negative</label>
-                    <input type="radio" id="2nd-td-ach" name="statusTD2nd" value="Achieved">
-                    <label for="2nd-td-ach" class="status-radio-label">Achieved</label>
-                  </div>
+                  <div><span id="2nd-status-td" class="badge badge-neutral">—</span></div>
                 </div>
               </div>
             </div>

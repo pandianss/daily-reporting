@@ -238,6 +238,59 @@ function normalizeBranch(br) {
   };
 }
 
+const BASE_KEY_MAP = {
+  "Target_Accts_Opened": "targetAcctsOpened",
+  "Target_Growth_SB": "targetGrowthSB",
+  "Target_Growth_CD": "targetGrowthCD",
+  "Target_Growth_TD": "targetGrowthTD",
+  "Allotted_CASA_Winback": "allottedCasaWinback",
+  "Yesterday_Bal_SB": "yestBalSB",
+  "Yesterday_Bal_CD": "yestBalCD",
+  "Yesterday_Bal_TD": "yestBalTD",
+  "UptoYest_Accts_SB": "uptoYestAcctsSB",
+  "UptoYest_Accts_CD": "uptoYestAcctsCD",
+  "Curr_Month_Diamond": "currMonthDiamond",
+  "Curr_Month_Platinum": "currMonthPlatinum",
+  "Curr_Month_Ultra_HNI": "currMonthUltraHni",
+  "Curr_Month_Premium": "currMonthPremium",
+  "Target_Credit_Cards": "targetCreditCards",
+  "Target_IOB_Connect": "targetIobConnect",
+  "Target_Net_Banking": "targetNetBanking",
+  "Target_Ongoing_Campaigns": "targetOngoingCampaigns",
+  "Base_Low_Balance_Funding": "baseLowBalanceFunding",
+  "Base_Low_Bal_SB": "baseLowBalSB",
+  "Base_Low_Bal_CD": "baseLowBalCD",
+  "Bal_31Mar_SB": "bal31MarSB",
+  "Bal_31Mar_CD": "bal31MarCD",
+  "Bal_31Mar_TD": "bal31MarTD",
+  "Target_Accts_SB": "targetAcctsSB",
+  "Target_Accts_CD": "targetAcctsCD",
+  "FY_Diamond": "fyDiamond",
+  "FY_Platinum": "fyPlatinum",
+  "FY_Ultra_HNI": "fyUltraHni",
+  "FY_Premium": "fyPremium",
+  "Prev_Month_Diamond": "prevMonthDiamond",
+  "Prev_Month_Platinum": "prevMonthPlatinum",
+  "Prev_Month_Ultra_HNI": "prevMonthUltraHni",
+  "Prev_Month_Premium": "prevMonthPremium",
+  "Base_Inoperative_Accts": "baseInoperativeAccts",
+  "Base_Inoperative_Amt": "baseInoperativeAmt",
+  "Base_Inactive_Accts": "baseInactiveAccts",
+  "Base_Inactive_Amt": "baseInactiveAmt",
+  "Base_DEAF_Accts": "baseDeafAccts",
+  "Base_DEAF_Amt": "baseDeafAmt"
+};
+
+function normalizeBase(row) {
+  if (!row) return {};
+  const out = {};
+  for (const key in row) {
+    const normKey = BASE_KEY_MAP[key] || key.toLowerCase().replace(/_/g, "");
+    out[normKey] = row[key];
+  }
+  return out;
+}
+
 // Rows currently shown in the Submissions Log (already normalized); used by CSV export
 let lastReportRows = null;
 
@@ -806,6 +859,22 @@ function loadBranchBases(solCode) {
 function renderBranchBases(dBase, mBase) {
   currentBranchBases = { daily: dBase, monthly: mBase };
   updateGrowthStatusBadges();
+  
+  // Update 2nd Line status indicators automatically
+  const statusSB = growthStatusVs31Mar("SB", 0);
+  const statusCD = growthStatusVs31Mar("CD", 0);
+  const statusTD = growthStatusVs31Mar("TD", 0);
+  const totalYestSBCD = (Number(dBase.yestBalSB) || 0) + (Number(dBase.yestBalCD) || 0);
+  const totalBaseSBCD = (Number(mBase.bal31MarSB) || 0) + (Number(mBase.bal31MarCD) || 0);
+  const statusCASA = totalYestSBCD >= totalBaseSBCD ? "Positive" : "Negative";
+
+  [["sb", statusSB], ["cd", statusCD], ["td", statusTD], ["casa", statusCASA]].forEach(([segment, status]) => {
+    const el = document.getElementById(`2nd-status-${segment}`);
+    if (el) {
+      el.textContent = status;
+      el.className = `badge badge-${status === "Positive" ? "success" : "danger"}`;
+    }
+  });
   // Low balance funding grid: totals come from admin monthly ingestion
   document.getElementById("low-bal-total-sb").textContent = mBase.baseLowBalSB || 0;
   document.getElementById("low-bal-total-cd").textContent = mBase.baseLowBalCD || 0;
@@ -861,8 +930,11 @@ async function fetchDashboardTelemetry(solCode) {
     const res = await fetch(`${appSettings.scriptUrl}?action=getDashboardData&rollNumber=${currentUser.rollNumber}&dateFilter=${dateFilter}`);
     const data = await res.json();
     if (data.success) {
-      const dBase = (data.dailyBase && data.dailyBase[solCode]) || {};
-      const mBase = (data.monthlyBase && data.monthlyBase[solCode]) || {};
+      let dBase = (data.dailyBase && data.dailyBase[solCode]) || {};
+      let mBase = (data.monthlyBase && data.monthlyBase[solCode]) || {};
+      
+      dBase = normalizeBase(dBase);
+      mBase = normalizeBase(mBase);
       
       if (data.roleParamMapping) {
         roleParamMapping = data.roleParamMapping;
@@ -964,6 +1036,17 @@ function setupFormHandlers() {
         }
       });
     });
+
+    // Automatically calculate and append status parameters for 2nd Line submissions
+    if (currentUser.role === "2nd Line") {
+      payload.statusSB = growthStatusVs31Mar("SB", 0);
+      payload.statusCD = growthStatusVs31Mar("CD", 0);
+      payload.statusTD = growthStatusVs31Mar("TD", 0);
+      
+      const totalYestSBCD = (Number(currentBranchBases.daily.yestBalSB) || 0) + (Number(currentBranchBases.daily.yestBalCD) || 0);
+      const totalBaseSBCD = (Number(currentBranchBases.monthly.bal31MarSB) || 0) + (Number(currentBranchBases.monthly.bal31MarCD) || 0);
+      payload.statusCASA = totalYestSBCD >= totalBaseSBCD ? "Positive" : "Negative";
+    }
 
     // Submit payload
     showToast("Submitting performance report...");
