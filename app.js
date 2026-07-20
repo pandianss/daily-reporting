@@ -600,7 +600,9 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
       const isGlobal = ["RO SRM", "Chief Manager", "Admin"].includes(user.role) || user.assignedSols.includes("*");
       
       mockBranches.forEach(br => {
-        if (isGlobal || user.assignedSols.includes(br.solCode)) {
+        if (isGlobal || 
+            (user.role === "RO Guardian" && br.roGuardianRoll === rollNumber) || 
+            user.assignedSols.includes(br.solCode)) {
           userBranches.push(br);
         }
       });
