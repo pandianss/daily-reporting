@@ -673,3 +673,19 @@ header {
   50% { transform: scale(1.15); }
   100% { transform: scale(1); }
 }
+
+/* Guardian Branch selection highlights */
+.branch-status-box.completed-highlight {
+  border-left: 5px solid var(--success-color);
+  background-color: rgba(16, 185, 129, 0.05);
+}
+
+.branch-status-box.submitted-highlight {
+  border-left: 5px solid var(--info-color);
+  background-color: rgba(14, 165, 233, 0.05);
+}
+
+.branch-status-box:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}

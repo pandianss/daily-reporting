@@ -518,6 +518,9 @@ function switchView(viewId) {
     if (viewId === "settings-view" && !isAdmin) {
       viewId = hasReports ? "dashboard-view" : "entry-view";
     }
+    if (viewId === "guardian-landing-view" && role !== "RO Guardian") {
+      viewId = hasReports ? "dashboard-view" : "entry-view";
+    }
     if (viewId === "reports-view" && !hasReports) {
       viewId = "entry-view";
     }
@@ -551,6 +554,8 @@ function switchView(viewId) {
       loadDashboardData();
     } else if (viewId === "reports-view") {
       loadReportsData();
+    } else if (viewId === "guardian-landing-view") {
+      loadGuardianLandingPage();
     } else if (viewId === "admin-view") {
       renderRoleParamMappingTable();
       document.getElementById("admin-ticker-input").value = roBroadcastMessage;
@@ -747,14 +752,19 @@ function setupSessionUI() {
   const hasReports = ["RO SRM", "Chief Manager", "Admin", "RO Guardian"].includes(currentUser.role);
   const hasEntry = ["1st Line", "2nd Line", "RO Guardian"].includes(currentUser.role);
   const isAdmin = currentUser.role === "Admin";
+  const isGuardian = currentUser.role === "RO Guardian";
   
   const navReports = document.getElementById("nav-reports");
   const navAdmin = document.getElementById("nav-admin");
   const navEntry = document.getElementById("nav-entry-form");
   const navSettings = document.getElementById("nav-settings");
+  const navGuardian = document.getElementById("nav-guardian-branches");
 
   navReports.style.display = hasReports ? "block" : "none";
   navEntry.style.display = hasEntry ? "block" : "none";
+  if (navGuardian) {
+    navGuardian.style.display = isGuardian ? "block" : "none";
+  }
 
   if (hasEntry) {
     setupReportingForm();
@@ -772,13 +782,15 @@ function setupSessionUI() {
   const tabs = document.querySelectorAll(".nav-tab");
   tabs.forEach(t => t.classList.remove("active"));
   
-  // RO Guardian and monitoring roles start on Live Dashboard to see scope status
-  if (hasReports) {
+  if (isGuardian) {
+    if (navGuardian) navGuardian.classList.add("active");
+    switchView("guardian-landing-view");
+  } else if (hasReports) {
     tabs[0].classList.add("active"); // Live dashboard
     switchView("dashboard-view");
   } else {
     const entryTab = document.getElementById("nav-entry-form");
-    entryTab.classList.add("active");
+    if (entryTab) entryTab.classList.add("active");
     switchView("entry-view");
   }
 }
@@ -1101,6 +1113,14 @@ function setupFormHandlers() {
   document.getElementById("guardian-sol-select").addEventListener("change", (e) => {
     loadBranchBases(e.target.value);
   });
+
+  // Guardian Back to Branch list button
+  const btnGuardianBack = document.getElementById("btn-guardian-back");
+  if (btnGuardianBack) {
+    btnGuardianBack.addEventListener("click", () => {
+      switchView("guardian-landing-view");
+    });
+  }
 
   // Form date selector refreshes bases for that selected date
   document.getElementById("form-date").addEventListener("change", () => {
@@ -2213,5 +2233,99 @@ function renderRoleParamMappingTable() {
     });
     
     tbody.appendChild(tr);
+  });
+}
+
+// Dynamically renders the list of assigned branches for the RO Guardian on landing
+async function loadGuardianLandingPage() {
+  const grid = document.getElementById("guardian-branches-grid");
+  if (!grid) return;
+  
+  grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">Loading branch submission status...</div>`;
+  
+  const dateStr = getTodayDateString();
+  let submissions = [];
+  
+  if (appSettings.mockMode) {
+    submissions = mockSubmissions.map(normalizeSubmission).filter(s => s.reportingDate === dateStr);
+  } else {
+    if (!appSettings.scriptUrl) return;
+    try {
+      const res = await fetch(`${appSettings.scriptUrl}?action=getDashboardData&rollNumber=${currentUser.rollNumber}`);
+      const data = await res.json();
+      if (data.success) {
+        submissions = (data.submissions || []).map(normalizeSubmission);
+      }
+    } catch (e) {
+      console.error(e);
+      showToast("Failed to sync live submissions status.");
+    }
+  }
+  
+  grid.innerHTML = "";
+  
+  if (currentUser.branches.length === 0) {
+    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">No branches have been assigned to your roll number under the Branches database.</div>`;
+    return;
+  }
+  
+  currentUser.branches.forEach(br => {
+    // Check submissions logged today
+    const sub1st = submissions.find(s => s.solCode === br.solCode && s.role === "1st Line" && s.reportingDate === dateStr);
+    const sub2nd = submissions.find(s => s.solCode === br.solCode && s.role === "2nd Line" && s.reportingDate === dateStr);
+    const subRO = submissions.find(s => s.solCode === br.solCode && s.role === "RO Guardian" && s.reportingDate === dateStr);
+    
+    const isCompleted = !!subRO; 
+    const isSubmittingToday = (!!sub1st || !!sub2nd);
+    
+    const card = document.createElement("div");
+    card.className = `card branch-status-box ${isCompleted ? 'completed-highlight' : (isSubmittingToday ? 'submitted-highlight' : '')}`;
+    card.style.display = "flex";
+    card.style.flexDirection = "column";
+    card.style.justifyContent = "space-between";
+    card.style.padding = "1.25rem";
+    card.style.margin = "0";
+    
+    card.innerHTML = `
+      <div>
+        <div class="branch-status-name" style="font-weight: 700; font-size: 1.05rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.75rem; color: var(--text-primary);">
+          🏦 ${escapeHtml(br.solCode)} - ${escapeHtml(br.branchName)}
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${sub1st ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.05)'}; color: ${sub1st ? 'var(--success-color)' : 'var(--text-secondary)'}; font-weight: 500;">
+            <span>1st Line Entry</span>
+            <span>${sub1st ? '✓ Submitted' : '✗ Pending'}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${sub2nd ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.05)'}; color: ${sub2nd ? 'var(--success-color)' : 'var(--text-secondary)'}; font-weight: 500;">
+            <span>2nd Line Entry</span>
+            <span>${sub2nd ? '✓ Submitted' : '✗ Pending'}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: ${subRO ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.05)'}; color: ${subRO ? 'var(--success-color)' : 'var(--text-secondary)'}; font-weight: 500;">
+            <span>Your Audit Report</span>
+            <span>${subRO ? '✓ Completed' : '✗ Pending'}</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn ${isCompleted ? 'btn-secondary' : 'btn-primary'}" style="width: 100%; font-size: 0.8rem; padding: 0.5rem; margin: 0;">
+        ${isCompleted ? 'Edit / View Audit Report' : 'Review & Submit Report'}
+      </button>
+    `;
+    
+    card.addEventListener("click", () => {
+      const select = document.getElementById("guardian-sol-select");
+      if (select) {
+        select.value = br.solCode;
+        loadBranchBases(br.solCode);
+      }
+      
+      const tabs = document.querySelectorAll(".nav-tab");
+      tabs.forEach(t => t.classList.remove("active"));
+      const entryTab = document.getElementById("nav-entry-form");
+      if (entryTab) entryTab.classList.add("active");
+      
+      switchView("entry-view");
+    });
+    
+    grid.appendChild(card);
   });
 }

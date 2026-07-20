@@ -28,6 +28,7 @@
     <nav class="nav-tabs" id="main-navigation" style="display: none;">
       <button class="nav-tab active" data-target="dashboard-view">Live Status Dashboard</button>
       <button class="nav-tab" id="nav-reports" data-target="reports-view" style="display: none;">Submissions Log</button>
+      <button class="nav-tab" id="nav-guardian-branches" data-target="guardian-landing-view" style="display: none;">My Branches</button>
       <button class="nav-tab" id="nav-entry-form" data-target="entry-view">Daily Entry Form</button>
       <button class="nav-tab" id="nav-admin" data-target="admin-view" style="display: none;">Admin Targets</button>
       <button class="nav-tab" id="nav-settings" data-target="settings-view" style="display: none;">App Settings</button>
@@ -45,6 +46,20 @@
 
     <!-- Main Views Container -->
     <main>
+      <!-- 1b. GUARDIAN LANDING VIEW -->
+      <section id="guardian-landing-view" class="view-panel">
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card-title">🛡️ Guardian Branch Selection</div>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0;">
+            Below is the list of branches assigned under your custody. Select a branch to proceed with today's campaign audit logs. Branches with completed entries are highlighted to prevent duplicate submissions.
+          </p>
+        </div>
+        
+        <div class="form-grid-3" id="guardian-branches-grid">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </section>
+
       <!-- 1. LOGIN VIEW -->
       <section id="login-view" class="view-panel active">
         <div class="login-wrapper">
@@ -520,6 +535,9 @@
           <div id="form-ro-guardian-section" style="display: none;">
             <div class="card">
               <div class="card-title">🛡️ Guardian Multi-Branch Audit Review</div>
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                <button type="button" id="btn-guardian-back" class="btn btn-secondary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; display: flex; align-items: center; gap: 0.25rem;">← Back to Branch List</button>
+              </div>
               <div class="form-group" style="max-width: 320px;">
                 <label for="guardian-sol-select">Select Branch to Report On</label>
                 <select id="guardian-sol-select" class="form-select" required>
