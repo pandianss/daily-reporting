@@ -6,7 +6,7 @@ let wizardCards = [];
 let currentStepIndex = 0;
 let appSettings = {
   // Hardcode your Google Apps Script Web App URL here to make it automatically live for all devices (mobile/desktop):
-  scriptUrl: "https://script.google.com/macros/s/AKfycbxLkY22tJA8ryrUzrd055KIDkHGsh0EUTGXN7QFTO_wWOpVoFWHggP7dEX7UwsghXLgKA/exec",
+  scriptUrl: "https://script.google.com/macros/s/AKfycbz_uK1nbMSBVYIdhHSFwq6hxBKAZGyeZsv-gfKofd_MxnPAcWTda62zfL0f9d4lS0Bf/exec",
   mockMode: false // Set to false by default for live sheets connection
 };
 
