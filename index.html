@@ -178,27 +178,29 @@
                 <span class="accordion-icon">▼</span>
               </div>
               <div class="card-body">
-                <table class="matrix-table">
-                  <thead>
-                    <tr>
-                      <th>Segment</th>
-                      <th>Total Low Balance Accounts</th>
-                      <th>Funded Today (Count)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>SB</strong></td>
-                      <td><span id="low-bal-total-sb">0</span></td>
-                      <td><input type="number" min="0" id="sb-low-bal-funded" name="fundingSB" class="matrix-input" placeholder="0"></td>
-                    </tr>
-                    <tr>
-                      <td><strong>CD</strong></td>
-                      <td><span id="low-bal-total-cd">0</span></td>
-                      <td><input type="number" min="0" id="cd-low-bal-funded" name="fundingCD" class="matrix-input" placeholder="0"></td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="table-responsive">
+                  <table class="matrix-table">
+                    <thead>
+                      <tr>
+                        <th>Segment</th>
+                        <th>Total Low Balance Accounts</th>
+                        <th>Funded Today (Count)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>SB</strong></td>
+                        <td><span id="low-bal-total-sb">0</span></td>
+                        <td><input type="number" min="0" id="sb-low-bal-funded" name="fundingSB" class="matrix-input" placeholder="0"></td>
+                      </tr>
+                      <tr>
+                        <td><strong>CD</strong></td>
+                        <td><span id="low-bal-total-cd">0</span></td>
+                        <td><input type="number" min="0" id="cd-low-bal-funded" name="fundingCD" class="matrix-input" placeholder="0"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
@@ -210,40 +212,42 @@
                 <span class="accordion-icon">▼</span>
               </div>
               <div class="card-body">
-                <table class="matrix-table">
-                  <thead>
-                    <tr>
-                      <th>Segment</th>
-                      <th>Balance as on 31.03</th>
-                      <th>Yesterday's Balance</th>
-                      <th>Today's Growth (₹)</th>
-                      <th>Status vs 31.03 (Auto)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>SB</strong></td>
-                      <td><span id="bal-31mar-sb">₹0</span></td>
-                      <td><span id="bal-yest-sb">₹0</span></td>
-                      <td><input type="number" id="sb-growth" name="growthSB" class="matrix-input" placeholder="0"></td>
-                      <td><span id="growth-status-sb" class="badge badge-neutral">—</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>CD</strong></td>
-                      <td><span id="bal-31mar-cd">₹0</span></td>
-                      <td><span id="bal-yest-cd">₹0</span></td>
-                      <td><input type="number" id="cd-growth" name="growthCD" class="matrix-input" placeholder="0"></td>
-                      <td><span id="growth-status-cd" class="badge badge-neutral">—</span></td>
-                    </tr>
-                    <tr>
-                      <td><strong>TD</strong></td>
-                      <td><span id="bal-31mar-td">₹0</span></td>
-                      <td><span id="bal-yest-td">₹0</span></td>
-                      <td><input type="number" id="td-growth" name="growthTD" class="matrix-input" placeholder="0"></td>
-                      <td><span id="growth-status-td" class="badge badge-neutral">—</span></td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="table-responsive">
+                  <table class="matrix-table">
+                    <thead>
+                      <tr>
+                        <th>Segment</th>
+                        <th>Balance as on 31.03</th>
+                        <th>Yesterday's Balance</th>
+                        <th>Today's Growth (₹)</th>
+                        <th>Status vs 31.03 (Auto)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>SB</strong></td>
+                        <td><span id="bal-31mar-sb">₹0</span></td>
+                        <td><span id="bal-yest-sb">₹0</span></td>
+                        <td><input type="number" id="sb-growth" name="growthSB" class="matrix-input" placeholder="0"></td>
+                        <td><span id="growth-status-sb" class="badge badge-neutral">—</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>CD</strong></td>
+                        <td><span id="bal-31mar-cd">₹0</span></td>
+                        <td><span id="bal-yest-cd">₹0</span></td>
+                        <td><input type="number" id="cd-growth" name="growthCD" class="matrix-input" placeholder="0"></td>
+                        <td><span id="growth-status-cd" class="badge badge-neutral">—</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>TD</strong></td>
+                        <td><span id="bal-31mar-td">₹0</span></td>
+                        <td><span id="bal-yest-td">₹0</span></td>
+                        <td><input type="number" id="td-growth" name="growthTD" class="matrix-input" placeholder="0"></td>
+                        <td><span id="growth-status-td" class="badge badge-neutral">—</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
@@ -255,33 +259,35 @@
                 <span class="accordion-icon">▼</span>
               </div>
               <div class="card-body">
-                <table class="matrix-table">
-                  <thead>
-                    <tr>
-                      <th>Account Type</th>
-                      <th>Monthly Target</th>
-                      <th>Opened up to Yesterday</th>
-                      <th>Gap to Target</th>
-                      <th>Today's Actuals (Opened)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>SB Accounts</strong></td>
-                      <td><span id="ao-target-sb">0</span></td>
-                      <td><span id="ao-uptoyest-sb">0</span></td>
-                      <td><span id="ao-gap-sb">0</span></td>
-                      <td><input type="number" min="0" id="accts-opened-sb" name="acctsOpenedSB" class="matrix-input" placeholder="0"></td>
-                    </tr>
-                    <tr>
-                      <td><strong>CD Accounts</strong></td>
-                      <td><span id="ao-target-cd">0</span></td>
-                      <td><span id="ao-uptoyest-cd">0</span></td>
-                      <td><span id="ao-gap-cd">0</span></td>
-                      <td><input type="number" min="0" id="accts-opened-cd" name="acctsOpenedCD" class="matrix-input" placeholder="0"></td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="table-responsive">
+                  <table class="matrix-table">
+                    <thead>
+                      <tr>
+                        <th>Account Type</th>
+                        <th>Monthly Target</th>
+                        <th>Opened up to Yesterday</th>
+                        <th>Gap to Target</th>
+                        <th>Today's Actuals (Opened)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>SB Accounts</strong></td>
+                        <td><span id="ao-target-sb">0</span></td>
+                        <td><span id="ao-uptoyest-sb">0</span></td>
+                        <td><span id="ao-gap-sb">0</span></td>
+                        <td><input type="number" min="0" id="accts-opened-sb" name="acctsOpenedSB" class="matrix-input" placeholder="0"></td>
+                      </tr>
+                      <tr>
+                        <td><strong>CD Accounts</strong></td>
+                        <td><span id="ao-target-cd">0</span></td>
+                        <td><span id="ao-uptoyest-cd">0</span></td>
+                        <td><span id="ao-gap-cd">0</span></td>
+                        <td><input type="number" min="0" id="accts-opened-cd" name="acctsOpenedCD" class="matrix-input" placeholder="0"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
@@ -293,47 +299,49 @@
                 <span class="accordion-icon">▼</span>
               </div>
               <div class="card-body">
-                <table class="matrix-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>FY Performance</th>
-                      <th>Previous Month</th>
-                      <th>Current Month (Up to Yesterday)</th>
-                      <th>Opened Today</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>Step-up RD</strong></td>
-                      <td><span id="pa-fy-stepuprd">0</span></td>
-                      <td><span id="pa-prev-stepuprd">0</span></td>
-                      <td><span id="pa-curr-stepuprd">0</span></td>
-                      <td><input type="number" min="0" id="stepuprd-accts" name="acctsStepUpRD" class="matrix-input" placeholder="0"></td>
-                    </tr>
-                    <tr>
-                      <td><strong>SB Platinum</strong></td>
-                      <td><span id="pa-fy-platinum">0</span></td>
-                      <td><span id="pa-prev-platinum">0</span></td>
-                      <td><span id="pa-curr-platinum">0</span></td>
-                      <td><input type="number" min="0" id="platinum-accts" name="acctsPlatinum" class="matrix-input" placeholder="0"></td>
-                    </tr>
-                    <tr>
-                      <td><strong>Ultra HNI</strong></td>
-                      <td><span id="pa-fy-uhni">0</span></td>
-                      <td><span id="pa-prev-uhni">0</span></td>
-                      <td><span id="pa-curr-uhni">0</span></td>
-                      <td><input type="number" min="0" id="uhni-accts" name="acctsUltraHni" class="matrix-input" placeholder="0"></td>
-                    </tr>
-                    <tr>
-                      <td><strong>SB Premium</strong></td>
-                      <td><span id="pa-fy-premium">0</span></td>
-                      <td><span id="pa-prev-premium">0</span></td>
-                      <td><span id="pa-curr-premium">0</span></td>
-                      <td><input type="number" min="0" id="premium-accts" name="acctsPremium" class="matrix-input" placeholder="0"></td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="table-responsive">
+                  <table class="matrix-table">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>FY Performance</th>
+                        <th>Previous Month</th>
+                        <th>Current Month (Up to Yesterday)</th>
+                        <th>Opened Today</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Step-up RD</strong></td>
+                        <td><span id="pa-fy-stepuprd">0</span></td>
+                        <td><span id="pa-prev-stepuprd">0</span></td>
+                        <td><span id="pa-curr-stepuprd">0</span></td>
+                        <td><input type="number" min="0" id="stepuprd-accts" name="acctsStepUpRD" class="matrix-input" placeholder="0"></td>
+                      </tr>
+                      <tr>
+                        <td><strong>SB Platinum</strong></td>
+                        <td><span id="pa-fy-platinum">0</span></td>
+                        <td><span id="pa-prev-platinum">0</span></td>
+                        <td><span id="pa-curr-platinum">0</span></td>
+                        <td><input type="number" min="0" id="platinum-accts" name="acctsPlatinum" class="matrix-input" placeholder="0"></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Ultra HNI</strong></td>
+                        <td><span id="pa-fy-uhni">0</span></td>
+                        <td><span id="pa-prev-uhni">0</span></td>
+                        <td><span id="pa-curr-uhni">0</span></td>
+                        <td><input type="number" min="0" id="uhni-accts" name="acctsUltraHni" class="matrix-input" placeholder="0"></td>
+                      </tr>
+                      <tr>
+                        <td><strong>SB Premium</strong></td>
+                        <td><span id="pa-fy-premium">0</span></td>
+                        <td><span id="pa-prev-premium">0</span></td>
+                        <td><span id="pa-curr-premium">0</span></td>
+                        <td><input type="number" min="0" id="premium-accts" name="acctsPremium" class="matrix-input" placeholder="0"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
@@ -345,40 +353,42 @@
                 <span class="accordion-icon">▼</span>
               </div>
               <div class="card-body">
-                <table class="matrix-table">
-                  <thead>
-                    <tr>
-                      <th>Category</th>
-                      <th>Base Count (Last Month End)</th>
-                      <th>Base Amount (Last Month End)</th>
-                      <th>Activated Today (Count)</th>
-                      <th>Activated Today (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>Inoperative</strong></td>
-                      <td><span id="act-base-count-inoperative">0</span></td>
-                      <td><span id="act-base-amt-inoperative">₹0</span></td>
-                      <td><input type="number" min="0" name="activationInoperative" class="matrix-input" placeholder="0"></td>
-                      <td><input type="number" min="0" name="activationInoperativeAmt" class="matrix-input" placeholder="0"></td>
-                    </tr>
-                    <tr>
-                      <td><strong>Inactive</strong></td>
-                      <td><span id="act-base-count-inactive">0</span></td>
-                      <td><span id="act-base-amt-inactive">₹0</span></td>
-                      <td><input type="number" min="0" name="activationInactive" class="matrix-input" placeholder="0"></td>
-                      <td><input type="number" min="0" name="activationInactiveAmt" class="matrix-input" placeholder="0"></td>
-                    </tr>
-                    <tr>
-                      <td><strong>DEAF</strong></td>
-                      <td><span id="act-base-count-deaf">0</span></td>
-                      <td><span id="act-base-amt-deaf">₹0</span></td>
-                      <td><input type="number" min="0" name="activationDeaf" class="matrix-input" placeholder="0"></td>
-                      <td><input type="number" min="0" name="activationDeafAmt" class="matrix-input" placeholder="0"></td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="table-responsive">
+                  <table class="matrix-table">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Base Count (Last Month End)</th>
+                        <th>Base Amount (Last Month End)</th>
+                        <th>Activated Today (Count)</th>
+                        <th>Activated Today (₹)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Inoperative</strong></td>
+                        <td><span id="act-base-count-inoperative">0</span></td>
+                        <td><span id="act-base-amt-inoperative">₹0</span></td>
+                        <td><input type="number" min="0" name="activationInoperative" class="matrix-input" placeholder="0"></td>
+                        <td><input type="number" min="0" name="activationInoperativeAmt" class="matrix-input" placeholder="0"></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Inactive</strong></td>
+                        <td><span id="act-base-count-inactive">0</span></td>
+                        <td><span id="act-base-amt-inactive">₹0</span></td>
+                        <td><input type="number" min="0" name="activationInactive" class="matrix-input" placeholder="0"></td>
+                        <td><input type="number" min="0" name="activationInactiveAmt" class="matrix-input" placeholder="0"></td>
+                      </tr>
+                      <tr>
+                        <td><strong>DEAF</strong></td>
+                        <td><span id="act-base-count-deaf">0</span></td>
+                        <td><span id="act-base-amt-deaf">₹0</span></td>
+                        <td><input type="number" min="0" name="activationDeaf" class="matrix-input" placeholder="0"></td>
+                        <td><input type="number" min="0" name="activationDeafAmt" class="matrix-input" placeholder="0"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
@@ -554,7 +564,8 @@
                  <span class="accordion-icon">▼</span>
                </div>
                <div class="card-body">
-                 <table class="matrix-table">
+                 <div class="table-responsive">
+                   <table class="matrix-table">
                    <thead>
                      <tr>
                        <th>Account Category</th>
@@ -581,6 +592,7 @@
                    </tbody>
                  </table>
                </div>
+             </div>
              </div>
 
              <!-- Compliance parameters -->
@@ -921,6 +933,6 @@
   <div id="toast-bar" class="toast-msg">Action processed successfully</div>
 
   <script src="iob_logo_data.js?v=20260721"></script>
-  <script src="app.js?v=20260721-14"></script>
+  <script src="app.js?v=20260721-15"></script>
 </body>
 </html>
