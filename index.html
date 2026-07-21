@@ -684,6 +684,43 @@
         </form>
       </section>
 
+      <!-- 4.5 SUCCESS PAGE VIEW -->
+      <section id="success-view" class="view-panel" style="display: none;">
+        <div class="card" style="text-align: center; max-width: 600px; margin: 2rem auto; padding: 3rem 2rem;">
+          <div class="success-icon-pulse" style="font-size: 4.5rem; line-height: 1; margin-bottom: 1.5rem; animation: pulse 2s infinite;">🎉</div>
+          <h2 style="font-weight: 600; font-size: 1.75rem; margin-bottom: 0.5rem; color: var(--success);">Submission Successful!</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem;" id="success-message">Your performance report has been securely saved in Google Sheets.</p>
+          
+          <div class="card" style="background-color: rgba(99, 102, 241, 0.05); border: 1px solid var(--border-color); text-align: left; padding: 1.25rem; margin-bottom: 2rem;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; font-size: 0.875rem;">
+              <div><strong style="color: var(--text-secondary);">Reporting Date:</strong></div>
+              <div id="success-date" style="text-align: right; font-weight: 500;">-</div>
+              
+              <div><strong style="color: var(--text-secondary);">Branch SOL:</strong></div>
+              <div id="success-sol" style="text-align: right; font-weight: 500;">-</div>
+              
+              <div><strong style="color: var(--text-secondary);">Submitter:</strong></div>
+              <div id="success-name" style="text-align: right; font-weight: 500;">-</div>
+              
+              <div><strong style="color: var(--text-secondary);">Role:</strong></div>
+              <div id="success-role" style="text-align: right; font-weight: 500;">-</div>
+            </div>
+          </div>
+
+          <!-- Guardian branch status section -->
+          <div id="success-guardian-summary" style="display: none; margin-bottom: 2rem; text-align: left;">
+            <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">🛡️ Tagged Branches Audit Status Today</div>
+            <div id="success-branches-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 250px; overflow-y: auto; padding-right: 0.25rem;">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: center; gap: 1rem;">
+            <button id="btn-success-action" class="btn btn-primary" style="width: auto; padding: 0.625rem 1.5rem;">Submit Another Report</button>
+          </div>
+        </div>
+      </section>
+
       <!-- 5. ADMIN TARGETS VIEW -->
       <section id="admin-view" class="view-panel">
         <div class="card">
@@ -875,6 +912,6 @@
   <!-- Toast Notification -->
   <div id="toast-bar" class="toast-msg">Action processed successfully</div>
 
-  <script src="app.js?v=20260721-3"></script>
+  <script src="app.js?v=20260721-4"></script>
 </body>
 </html>

@@ -443,6 +443,7 @@ let roleParamMapping = {
 };
 
 let roBroadcastMessage = "Welcome to the IOB Daily Performance Reporting Portal. Please ensure all daily metrics are submitted by 17:00 EOD.";
+let globalSubmissions = [];
 
 function tagDOMWithParams() {
   for (let idOrName in INPUT_TO_PARAM) {
@@ -1353,19 +1354,14 @@ function setupFormHandlers() {
       const record = normalizeSubmission(payload);
       record.timestamp = new Date().toISOString();
       mockSubmissions.push(record);
+      globalSubmissions.push(record);
       clearDraftFromLocalStorage();
       form.reset();
       document.getElementById("form-date").value = getTodayDateString();
       updateGrowthStatusBadges();
       showToast("Report submitted successfully (Mock Offline)!");
       triggerSubmitNotification(solCode, currentUser.role);
-      
-      if (normRole === "RO GUARDIAN") {
-        const currentSol = document.getElementById("guardian-sol-select").value;
-        if (currentSol) loadBranchBases(currentSol);
-      } else {
-        setupReportingForm();
-      }
+      showSuccessPage(solCode);
     } else {
       try {
         const result = await apiPost(payload);
@@ -1374,17 +1370,24 @@ function setupFormHandlers() {
           form.reset();
           document.getElementById("form-date").value = getTodayDateString();
           updateGrowthStatusBadges();
+          
+          // Pre-fetch live status behind-the-scenes so Guardian audited branches is up to date
+          if (normRole === "RO GUARDIAN") {
+            try {
+              const data = await apiPost({ action: "getDashboardData" });
+              if (data.success) {
+                globalSubmissions = (data.submissions || []).map(normalizeSubmission);
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          }
+          
           showToast(result.updated
             ? "Existing report for this date was updated in Google Sheets!"
             : "Performance report logged successfully in Google Sheets!");
           triggerSubmitNotification(solCode, currentUser.role);
-          
-          if (normRole === "RO GUARDIAN") {
-            const currentSol = document.getElementById("guardian-sol-select").value;
-            if (currentSol) loadBranchBases(currentSol);
-          } else {
-            setupReportingForm();
-          }
+          showSuccessPage(solCode);
         } else {
           showToast(result.error || "Submission failure.");
         }
@@ -1609,6 +1612,95 @@ function setupFormHandlers() {
       }
     });
   }
+
+  // Success view action button click listener
+  document.getElementById("btn-success-action").addEventListener("click", () => {
+    const normRole = String(currentUser.role).trim().toUpperCase();
+    if (normRole === "RO GUARDIAN") {
+      loadGuardianLandingPage();
+    } else {
+      setupReportingForm();
+      switchView("entry-view");
+    }
+  });
+}
+
+function showSuccessPage(solCode) {
+  const normRole = String(currentUser.role).trim().toUpperCase();
+  
+  // 1. Populate static submitter details card
+  document.getElementById("success-date").textContent = document.getElementById("form-date").value || getTodayDateString();
+  document.getElementById("success-sol").textContent = solCode;
+  document.getElementById("success-name").textContent = currentUser.name || "Unknown Submitter";
+  document.getElementById("success-role").textContent = currentUser.role || "Unknown Role";
+  
+  // 2. Clear previous list
+  const listEl = document.getElementById("success-branches-list");
+  listEl.innerHTML = "";
+  
+  // 3. Handle view based on role
+  const guardianSection = document.getElementById("success-guardian-summary");
+  const actionBtn = document.getElementById("btn-success-action");
+  
+  if (normRole === "RO GUARDIAN") {
+    guardianSection.style.display = "block";
+    actionBtn.textContent = "Back to Branch Selection";
+    
+    const todayStr = document.getElementById("form-date").value || getTodayDateString();
+    
+    // Build checkmarks for each branch assigned to the Guardian
+    currentUser.branches.forEach(b => {
+      const hasSubmitted = globalSubmissions.some(sub => {
+        const subSol = String(sub.solCode).trim();
+        const subRole = String(sub.role).trim().toUpperCase();
+        const subDate = sub.reportingDate;
+        return subSol === String(b.solCode).trim() && 
+               subRole === "RO GUARDIAN" && 
+               subDate === todayStr;
+      });
+      
+      const item = document.createElement("div");
+      item.style.display = "flex";
+      item.style.justifyContent = "space-between";
+      item.style.alignItems = "center";
+      item.style.padding = "0.5rem 0.75rem";
+      item.style.border = "1px solid var(--border-color)";
+      item.style.borderRadius = "0.375rem";
+      item.style.backgroundColor = "var(--card-bg)";
+      item.style.marginBottom = "0.25rem";
+      
+      const titleSpan = document.createElement("span");
+      titleSpan.innerHTML = `<strong style="color: var(--text-primary); font-size: 0.875rem;">${b.solCode}</strong> - <span style="font-size: 0.8rem; color: var(--text-secondary);">${b.branchName}</span>`;
+      
+      const statusBadge = document.createElement("span");
+      statusBadge.style.fontSize = "0.7rem";
+      statusBadge.style.fontWeight = "600";
+      statusBadge.style.padding = "0.2rem 0.6rem";
+      statusBadge.style.borderRadius = "9999px";
+      
+      if (hasSubmitted) {
+        statusBadge.textContent = "✔️ AUDITED";
+        statusBadge.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
+        statusBadge.style.color = "var(--success)";
+        statusBadge.style.border = "1px solid rgba(16, 185, 129, 0.15)";
+      } else {
+        statusBadge.textContent = "❌ PENDING";
+        statusBadge.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+        statusBadge.style.color = "var(--danger)";
+        statusBadge.style.border = "1px solid rgba(239, 68, 68, 0.15)";
+      }
+      
+      item.appendChild(titleSpan);
+      item.appendChild(statusBadge);
+      listEl.appendChild(item);
+    });
+  } else {
+    guardianSection.style.display = "none";
+    actionBtn.textContent = "Back to Entry Form";
+  }
+  
+  // 4. Show success view
+  switchView("success-view");
 }
 
 // Dynamic dashboard compiler
@@ -1634,7 +1726,8 @@ async function loadDashboardData() {
       const data = await apiPost({ action: "getDashboardData" });
       if (data.success) {
         branches = (data.branches || []).map(normalizeBranch);
-        submissions = (data.submissions || []).map(normalizeSubmission);
+        globalSubmissions = (data.submissions || []).map(normalizeSubmission);
+        submissions = globalSubmissions;
         if (data.roleParamMapping) {
           roleParamMapping = data.roleParamMapping;
           localStorage.setItem("iob_role_param_mapping", JSON.stringify(roleParamMapping));
@@ -1740,7 +1833,8 @@ async function loadReportsData() {
     try {
       const data = await apiPost({ action: "getDashboardData", dateFilter: dateFilter });
       if (data.success && data.isManagementView) {
-        rows = (data.submissions || []).map(normalizeSubmission);
+        globalSubmissions = (data.submissions || []).map(normalizeSubmission);
+        rows = globalSubmissions;
         if (data.roleParamMapping) {
           roleParamMapping = data.roleParamMapping;
           localStorage.setItem("iob_role_param_mapping", JSON.stringify(roleParamMapping));
@@ -2486,7 +2580,8 @@ async function loadGuardianLandingPage() {
     try {
       const data = await apiPost({ action: "getDashboardData" });
       if (data.success) {
-        submissions = (data.submissions || []).map(normalizeSubmission);
+        globalSubmissions = (data.submissions || []).map(normalizeSubmission);
+        submissions = globalSubmissions;
       }
     } catch (e) {
       console.error(e);
