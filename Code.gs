@@ -542,9 +542,14 @@ function submitReport(session, data) {
   data.role = session.role;
   data.reportingDate = reportingDate;
 
+  // Normalize by stripping BOTH underscores and whitespace: the Submissions
+  // sheet mixes conventions (metric headers use underscores like "Growth_SB",
+  // identity headers use spaces like "Roll Number"). Stripping only underscores
+  // left the spaced identity columns (Roll Number, SOL Code, Reporting Date,
+  // Submitter Name, Branch Name) unmatched, so they were written blank.
   const normalizedData = {};
   for (const key in data) {
-    normalizedData[key.toLowerCase().replace(/_/g, "")] = data[key];
+    normalizedData[key.toLowerCase().replace(/[\s_]/g, "")] = data[key];
   }
 
   // Server-side validation: ensure count and amount fields (except growth) are not negative
@@ -565,7 +570,7 @@ function submitReport(session, data) {
   try {
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     const newRow = headers.map(function (header) {
-      const nHeader = String(header).toLowerCase().replace(/_/g, "");
+      const nHeader = String(header).toLowerCase().replace(/[\s_]/g, "");
       if (nHeader === "timestamp") return new Date();
       return normalizedData[nHeader] !== undefined ? normalizedData[nHeader] : "";
     });
