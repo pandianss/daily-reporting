@@ -1648,8 +1648,8 @@ function showSuccessPage(solCode) {
     
     const todayStr = document.getElementById("form-date").value || getTodayDateString();
     
-    // Build checkmarks for each branch assigned to the Guardian
-    currentUser.branches.forEach(b => {
+    const assignedBranches = (currentUser && currentUser.branches) || [];
+    assignedBranches.forEach(b => {
       const hasSubmitted = globalSubmissions.some(sub => {
         const subSol = String(sub.solCode).trim();
         const subRole = String(sub.role).trim().toUpperCase();
