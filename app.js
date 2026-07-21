@@ -476,6 +476,7 @@ let roleParamMapping = {
 let roBroadcastMessage = "Welcome to the IOB Daily Performance Reporting Portal. Please ensure all daily metrics are submitted by 17:00 EOD.";
 let globalSubmissions = [];
 let lastSubmittedPayload = null;
+let dashboardPollInterval = null;
 
 function tagDOMWithParams() {
   for (let idOrName in INPUT_TO_PARAM) {
@@ -724,13 +725,21 @@ function switchView(viewId) {
       }
     });
     
-    // View-specific loading hooks
+    // Reset any active dashboard/guardian polling timers to prevent leaks
+    if (dashboardPollInterval) {
+      clearInterval(dashboardPollInterval);
+      dashboardPollInterval = null;
+    }
+    
+    // View-specific loading hooks & background real-time auto-refresh setups
     if (viewId === "dashboard-view") {
       loadDashboardData();
+      dashboardPollInterval = setInterval(loadDashboardData, 15000);
     } else if (viewId === "reports-view") {
       loadReportsData();
     } else if (viewId === "guardian-landing-view") {
       loadGuardianLandingPage();
+      dashboardPollInterval = setInterval(loadGuardianLandingPage, 15000);
     } else if (viewId === "admin-view") {
       renderRoleParamMappingTable();
       document.getElementById("admin-ticker-input").value = roBroadcastMessage;
@@ -2628,7 +2637,10 @@ async function loadGuardianLandingPage() {
   const grid = document.getElementById("guardian-branches-grid");
   if (!grid) return;
   
-  grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">Loading branch submission status...</div>`;
+  // Only show the spinner/placeholder if the grid is empty, avoiding screen flickering during background auto-refreshes
+  if (!grid.children.length || grid.querySelector(".branch-status-box") === null) {
+    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem;">Loading branch submission status...</div>`;
+  }
   
   const dateStr = getTodayDateString();
   let submissions = [];
