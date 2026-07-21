@@ -3153,7 +3153,7 @@ function initializeLottieLogos() {
       renderer: "svg",
       loop: false,
       autoplay: true,
-      path: "iob_logo.json"
+      animationData: typeof IOB_LOTTIE_LOGO !== "undefined" ? IOB_LOTTIE_LOGO : null
     });
 
     anim.addEventListener("complete", () => {
