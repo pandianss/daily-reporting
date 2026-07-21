@@ -989,11 +989,12 @@ function setupReportingForm() {
     loadBranchBases(sol.solCode);
   }
 
-  // Display sections containing metrics
-  document.getElementById("form-1st-line-section").style.display = "block";
-  document.getElementById("form-2nd-line-section").style.display = "block";
-  document.getElementById("form-ro-guardian-section").style.display = "block";
-  document.getElementById("form-loans-section").style.display = "block";
+  // Display sections containing metrics (guard against absent wrappers so a
+  // single missing id can't abort the whole form/wizard setup)
+  ["form-1st-line-section", "form-2nd-line-section", "form-ro-guardian-section", "form-loans-section"].forEach(sectionId => {
+    const section = document.getElementById(sectionId);
+    if (section) section.style.display = "block";
+  });
 
   // Hide/Show inputs according to parameters mapping
   const activeParams = roleParamMapping[role] || [];
@@ -1045,10 +1046,12 @@ function setupReportingForm() {
     }
   });
 
-  // Collect visible cards for the wizard steps
+  // Collect visible cards for the wizard steps. Only collapsible metric cards
+  // are steps; the date/branch header and the navigation bar are plain .card
+  // elements that must stay persistent across every step.
   wizardCards = [];
   cards.forEach(card => {
-    if (card.id === "wizard-navigation-bar" || card.querySelector("#wizard-navigation-bar")) {
+    if (!card.classList.contains("collapsible-card")) {
       return;
     }
     if (card.style.display !== "none") {
@@ -1064,10 +1067,12 @@ function setupReportingForm() {
 function loadBranchBases(solCode) {
   const form = document.getElementById("reporting-form");
   if (form) {
-    form.reset();
+    // Preserve the chosen reporting date across form.reset() (which would
+    // otherwise blank the required date field and block submission).
     const dateInput = document.getElementById("form-date");
-    const currentDate = dateInput ? dateInput.value : getTodayDateString();
-    if (dateInput) dateInput.value = currentDate;
+    const preservedDate = (dateInput && dateInput.value) ? dateInput.value : getTodayDateString();
+    form.reset();
+    if (dateInput) dateInput.value = preservedDate;
   }
 
   if (appSettings.mockMode) {
