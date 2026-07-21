@@ -12,9 +12,12 @@
   <div class="app-container">
     <!-- Header -->
     <header>
-      <div class="logo-section">
-        <h1>IOB</h1>
-        <p>Daily Performance Reporting Portal</p>
+      <div class="logo-section" style="display: flex; align-items: center; gap: 12px;">
+        <img src="2026logo_min.svg" alt="IOB Logo" style="height: 50px; width: auto;">
+        <div>
+          <h1 style="font-size: 1.5rem; font-weight: 700; color: var(--primary-light); letter-spacing: -0.025em; margin: 0; line-height: 1.2;">IOB</h1>
+          <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; line-height: 1.2;">Daily Performance Reporting Portal</p>
+        </div>
       </div>
       <div class="user-status" id="user-info-bar" style="display: none;">
         <div>
@@ -715,8 +718,11 @@
             </div>
           </div>
 
-          <div style="display: flex; justify-content: center; gap: 1rem;">
+          <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
             <button id="btn-success-action" class="btn btn-primary" style="width: auto; padding: 0.625rem 1.5rem;">Submit Another Report</button>
+            <button id="btn-download-share-img" class="btn btn-success" style="width: auto; padding: 0.625rem 1.5rem; display: flex; align-items: center; gap: 8px;">
+              <span>📲 Download WhatsApp Status Image</span>
+            </button>
           </div>
         </div>
       </section>
@@ -912,6 +918,6 @@
   <!-- Toast Notification -->
   <div id="toast-bar" class="toast-msg">Action processed successfully</div>
 
-  <script src="app.js?v=20260721-9"></script>
+  <script src="app.js?v=20260721-10"></script>
 </body>
 </html>

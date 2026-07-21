@@ -475,6 +475,7 @@ let roleParamMapping = {
 
 let roBroadcastMessage = "Welcome to the IOB Daily Performance Reporting Portal. Please ensure all daily metrics are submitted by 17:00 EOD.";
 let globalSubmissions = [];
+let lastSubmittedPayload = null;
 
 function tagDOMWithParams() {
   for (let idOrName in INPUT_TO_PARAM) {
@@ -1386,6 +1387,7 @@ function setupFormHandlers() {
       record.timestamp = new Date().toISOString();
       mockSubmissions.push(record);
       globalSubmissions.push(record);
+      lastSubmittedPayload = payload;
       clearDraftFromLocalStorage();
       form.reset();
       document.getElementById("form-date").value = getTodayDateString();
@@ -1397,6 +1399,7 @@ function setupFormHandlers() {
       try {
         const result = await apiPost(payload);
         if (result.success) {
+          lastSubmittedPayload = payload;
           clearDraftFromLocalStorage();
           form.reset();
           document.getElementById("form-date").value = getTodayDateString();
@@ -1653,6 +1656,12 @@ function setupFormHandlers() {
       setupReportingForm();
       switchView("entry-view");
     }
+  });
+
+  // Success view download WhatsApp image click listener
+  document.getElementById("btn-download-share-img").addEventListener("click", () => {
+    const solCode = document.getElementById("success-sol").textContent;
+    generateWhatsAppStatusImage(solCode);
   });
 }
 
@@ -2836,4 +2845,294 @@ function updateGrowthSummaryBadge() {
     <span class="summary-badge ${cdStatus === 'Positive' ? 'badge-success' : 'badge-danger'}">CD: ${cdStatus}</span>
     <span class="summary-badge ${tdStatus === 'Positive' ? 'badge-success' : 'badge-danger'}">TD: ${tdStatus}</span>
   `;
+}
+
+function downloadCanvasImage(canvas, filename) {
+  try {
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.download = filename;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("WhatsApp status image downloaded successfully!");
+  } catch (err) {
+    console.error("Canvas export failed:", err);
+    showToast("CORS policy restriction. Running through a local server will resolve this.");
+  }
+}
+
+function generateWhatsAppStatusImage(solCode) {
+  showToast("Generating shareable image...");
+  
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1920;
+  const ctx = canvas.getContext("2d");
+  
+  // Polyfill roundRect if missing
+  if (typeof ctx.roundRect !== "function") {
+    ctx.roundRect = function(x, y, w, h, r) {
+      if (w < 2 * r) r = w / 2;
+      if (h < 2 * r) r = h / 2;
+      this.beginPath();
+      this.moveTo(x+r, y);
+      this.arcTo(x+w, y,   x+w, y+h, r);
+      this.arcTo(x+w, y+h, x,   y+h, r);
+      this.arcTo(x,   y+h, x,   y,   r);
+      this.arcTo(x,   y,   x+w, y,   r);
+      this.closePath();
+      return this;
+    };
+  }
+
+  const normRole = String(currentUser.role).trim().toUpperCase();
+  const todayStr = document.getElementById("form-date").value || getTodayDateString();
+  const branchName = lastSubmittedPayload ? (lastSubmittedPayload.branchName || lastSubmittedPayload["Branch Name"] || "") : "";
+  
+  function drawText(text, x, y, font, color, align = "left", maxWidth = null) {
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.textAlign = align;
+    if (maxWidth) {
+      ctx.fillText(text, x, y, maxWidth);
+    } else {
+      ctx.fillText(text, x, y);
+    }
+  }
+
+  function drawMainContent(withImageLogo) {
+    // 1. Draw midnight blue gradient background
+    const grad = ctx.createLinearGradient(0, 0, 1080, 1920);
+    grad.addColorStop(0, "#080c14");
+    grad.addColorStop(0.5, "#0f172a");
+    grad.addColorStop(1, "#1e1b4b");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1080, 1920);
+    
+    // Draw soft glows
+    ctx.fillStyle = "rgba(99, 102, 241, 0.08)";
+    ctx.beginPath();
+    ctx.arc(200, 300, 400, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(16, 185, 129, 0.05)";
+    ctx.beginPath();
+    ctx.arc(880, 1600, 500, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Draw IOB header brand
+    if (withImageLogo) {
+      try {
+        const logo = new Image();
+        logo.src = "2026logo_min.svg";
+        // If image is already completed, draw it
+        if (logo.complete || logo.naturalWidth > 0) {
+          const logoW = 340;
+          const logoH = (logo.naturalHeight / logo.naturalWidth) * logoW || 130;
+          ctx.drawImage(logo, (1080 - logoW) / 2, 100, logoW, logoH);
+        } else {
+          // Emulated text header
+          drawText("INDIAN OVERSEAS BANK", 540, 160, "bold 42px Inter", "#ffffff", "center");
+        }
+      } catch (e) {
+        drawText("INDIAN OVERSEAS BANK", 540, 160, "bold 42px Inter", "#ffffff", "center");
+      }
+    } else {
+      // Draw fallback geometric emblem
+      ctx.fillStyle = "#0284c7"; // Sky blue
+      ctx.beginPath();
+      ctx.roundRect(540 - 50, 70, 100, 100, 12);
+      ctx.fill();
+      
+      // Grid lines
+      ctx.strokeStyle = "#eab308";
+      ctx.lineWidth = 6;
+      ctx.strokeRect(540 - 35, 85, 70, 70);
+      ctx.beginPath();
+      ctx.moveTo(540 - 35, 85);
+      ctx.lineTo(540 + 35, 155);
+      ctx.moveTo(540 + 35, 85);
+      ctx.lineTo(540 - 35, 155);
+      ctx.stroke();
+
+      drawText("INDIAN OVERSEAS BANK", 540, 230, "bold 42px Inter", "#ffffff", "center");
+    }
+
+    const titleOffset = withImageLogo ? 260 : 300;
+    drawText("DAILY REPORTING PORTAL", 540, titleOffset, "600 24px Inter", "#eab308", "center");
+
+    // Gold separator line
+    ctx.strokeStyle = "rgba(234, 179, 8, 0.3)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(100, titleOffset + 40);
+    ctx.lineTo(980, titleOffset + 40);
+    ctx.stroke();
+
+    // 3. Draw Translucent Card
+    const cardX = 80;
+    const cardY = titleOffset + 80;
+    const cardW = 920;
+    const cardH = 1350;
+    
+    ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(cardX, cardY, cardW, cardH, 30);
+    ctx.fill();
+    ctx.stroke();
+
+    // 4. Success Badge / Title
+    ctx.fillStyle = "rgba(16, 185, 129, 0.1)";
+    ctx.beginPath();
+    ctx.roundRect(cardX + 60, cardY + 50, cardW - 120, 110, 16);
+    ctx.fill();
+    
+    if (normRole === "RO GUARDIAN") {
+      drawText("🛡️ GUARDIAN BRANCH AUDIT", 540, cardY + 100, "bold 34px Inter", "#34d399", "center");
+      drawText("AUDIT SUBMISSION COMPLETED", 540, cardY + 138, "bold 20px Inter", "#ffffff", "center");
+    } else {
+      drawText("✓ PERFORMANCE REPORT", 540, cardY + 100, "bold 34px Inter", "#34d399", "center");
+      drawText("SUBMITTED SUCCESSFULLY", 540, cardY + 138, "bold 20px Inter", "#ffffff", "center");
+    }
+
+    // 5. Metadata Block
+    const metaY = cardY + 220;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
+    ctx.beginPath();
+    ctx.roundRect(cardX + 40, metaY, cardW - 80, 220, 20);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw metadata items
+    const leftColX = cardX + 80;
+    const rightColX = cardX + 380;
+    
+    drawText("Submitter:", leftColX, metaY + 55, "600 24px Inter", "#94a3b8");
+    drawText(currentUser.name || "Unknown", rightColX, metaY + 55, "600 24px Inter", "#ffffff", "left", 480);
+    
+    drawText("Role & Roll:", leftColX, metaY + 110, "600 24px Inter", "#94a3b8");
+    drawText(`${currentUser.role} (${currentUser.rollNumber})`, rightColX, metaY + 110, "600 24px Inter", "#ffffff");
+
+    drawText("Reporting Date:", leftColX, metaY + 165, "600 24px Inter", "#94a3b8");
+    drawText(todayStr, rightColX, metaY + 165, "600 24px Inter", "#ffffff");
+
+    // 6. SOL Detail Header
+    const solY = metaY + 245;
+    drawText(`BRANCH: ${solCode} - ${branchName}`, 540, solY + 30, "bold 26px Inter", "#ffffff", "center", 820);
+    
+    // Separator
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+    ctx.beginPath();
+    ctx.moveTo(cardX + 60, solY + 60);
+    ctx.lineTo(cardX + cardW - 60, solY + 60);
+    ctx.stroke();
+
+    // 7. Dynamic Data List
+    const dataY = solY + 110;
+    
+    if (normRole === "RO GUARDIAN") {
+      drawText("TAGGED BRANCHES AUDIT STATUS TODAY", 540, dataY, "bold 24px Inter", "#eab308", "center");
+      
+      const assignedBranches = (currentUser && currentUser.branches) || [];
+      let currentItemY = dataY + 70;
+      
+      assignedBranches.forEach((b, index) => {
+        if (index >= 10) return; // Cap listing to fit height
+        
+        const hasSubmitted = globalSubmissions.some(sub => {
+          const subSol = String(sub.solCode).trim();
+          const subRole = String(sub.role).trim().toUpperCase();
+          const subDate = sub.reportingDate;
+          return subSol === String(b.solCode).trim() && 
+                 subRole === "RO GUARDIAN" && 
+                 subDate === todayStr;
+        });
+
+        ctx.fillStyle = "rgba(255, 255, 255, 0.02)";
+        ctx.beginPath();
+        ctx.roundRect(cardX + 60, currentItemY - 35, cardW - 120, 60, 10);
+        ctx.fill();
+
+        drawText(`${b.solCode} - ${b.branchName}`, cardX + 90, currentItemY, "500 22px Inter", "#ffffff", "left", 540);
+        
+        if (hasSubmitted) {
+          drawText("✓ AUDITED", cardX + cardW - 100, currentItemY, "bold 22px Inter", "#34d399", "right");
+        } else {
+          drawText("✗ PENDING", cardX + cardW - 100, currentItemY, "bold 22px Inter", "#f87171", "right");
+        }
+        currentItemY += 80;
+      });
+    } else {
+      drawText("KEY METRICS PERFORMANCE", 540, dataY, "bold 24px Inter", "#eab308", "center");
+      
+      let currentItemY = dataY + 70;
+      const excludedKeys = [
+        "action", "token", "rollNumber", "submitterName", "role", "solCode", 
+        "branchName", "reportingDate", "statusSB", "statusCD", "statusTD", "statusCASA",
+        "Reporting Date", "Roll Number", "Submitter Name", "Submitter Nam", "Role", "SOL Code", "Branch Name"
+      ];
+      
+      let rowCount = 0;
+      for (const key in lastSubmittedPayload) {
+        if (excludedKeys.includes(key)) continue;
+        if (rowCount >= 10) break; // prevent overflowing the card boundary
+
+        const rawValue = lastSubmittedPayload[key];
+        let displayValue = String(rawValue);
+        
+        // Format money if applicable
+        if (key.toLowerCase().includes("growth") || key.toLowerCase().includes("amt")) {
+          const valNum = Number(rawValue) || 0;
+          displayValue = (valNum >= 0 ? "+" : "") + formatCurrency(valNum);
+        } else if (rawValue === true || rawValue === "true" || rawValue === "Yes") {
+          displayValue = "✓ Yes";
+        } else if (rawValue === false || rawValue === "false" || rawValue === "No") {
+          displayValue = "✗ No";
+        }
+
+        if (rowCount % 2 === 0) {
+          ctx.fillStyle = "rgba(255, 255, 255, 0.02)";
+          ctx.beginPath();
+          ctx.roundRect(cardX + 60, currentItemY - 35, cardW - 120, 60, 10);
+          ctx.fill();
+        }
+
+        const label = labelForKey(key);
+        drawText(label, cardX + 90, currentItemY, "500 22px Inter", "#cbd5e1", "left", 540);
+        drawText(displayValue, cardX + cardW - 90, currentItemY, "bold 22px Inter", "#ffffff", "right");
+
+        currentItemY += 80;
+        rowCount++;
+      }
+      
+      if (rowCount === 0) {
+        drawText("Daily reports saved successfully.", 540, dataY + 120, "italic 22px Inter", "#94a3b8", "center");
+      }
+    }
+
+    // 8. Footer Info
+    const footerY = 1850;
+    drawText("IOB DAILY PERFORMANCE PORTAL", 540, footerY, "bold 22px Inter", "#eab308", "center");
+    drawText("Secure Digital reporting. Direct Sync with central Google Sheets.", 540, footerY + 30, "20px Inter", "#64748b", "center");
+  }
+
+  // Pre-load IOB logo
+  const logo = new Image();
+  logo.crossOrigin = "anonymous";
+  
+  logo.onload = function() {
+    drawMainContent(true);
+    downloadCanvasImage(canvas, `IOB_Daily_Report_SOL_${solCode}_${todayStr}.png`);
+  };
+
+  logo.onerror = function() {
+    console.warn("Unable to load SVG logo. Falling back to geometric rendering.");
+    drawMainContent(false);
+    downloadCanvasImage(canvas, `IOB_Daily_Report_SOL_${solCode}_${todayStr}.png`);
+  };
+
+  logo.src = "2026logo_min.svg";
 }
