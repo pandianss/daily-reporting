@@ -3033,87 +3033,60 @@ function generateWhatsAppStatusImage(solCode) {
     ctx.lineTo(cardX + cardW - 60, solY + 60);
     ctx.stroke();
 
-    // 7. Dynamic Data List
+    // 7. Dynamic Data List — the actual values the user submitted today
+    // (applies to every role, including Guardians, whose submitted data is
+    // their audit confirmation and notes — not the branch status list)
     const dataY = solY + 110;
-    
-    if (normRole === "RO GUARDIAN") {
-      drawText("TAGGED BRANCHES AUDIT STATUS TODAY", 540, dataY, "bold 24px Inter", "#eab308", "center");
-      
-      const assignedBranches = (currentUser && currentUser.branches) || [];
-      let currentItemY = dataY + 70;
-      
-      assignedBranches.forEach((b, index) => {
-        if (index >= 10) return; // Cap listing to fit height
-        
-        const hasSubmitted = globalSubmissions.some(sub => {
-          const subSol = String(sub.solCode).trim();
-          const subRole = String(sub.role).trim().toUpperCase();
-          const subDate = sub.reportingDate;
-          return subSol === String(b.solCode).trim() && 
-                 subRole === "RO GUARDIAN" && 
-                 subDate === todayStr;
-        });
+    const listTitle = normRole === "RO GUARDIAN" ? "AUDIT DETAILS SUBMITTED" : "KEY METRICS PERFORMANCE";
+    drawText(listTitle, 540, dataY, "bold 24px Inter", "#eab308", "center");
 
+    let currentItemY = dataY + 70;
+    const excludedKeys = [
+      "action", "token", "rollNumber", "submitterName", "role", "solCode",
+      "branchName", "reportingDate", "statusSB", "statusCD", "statusTD", "statusCASA",
+      "Reporting Date", "Roll Number", "Submitter Name", "Submitter Nam", "Role", "SOL Code", "Branch Name"
+    ];
+
+    let rowCount = 0;
+    for (const key in lastSubmittedPayload) {
+      if (excludedKeys.includes(key)) continue;
+
+      const rawValue = lastSubmittedPayload[key];
+      // Skip fields the user left blank (e.g. empty audit notes) for a clean list
+      if (rawValue === "" || rawValue === null || rawValue === undefined) continue;
+      if (rowCount >= 12) break; // prevent overflowing the card boundary
+
+      let displayValue = String(rawValue);
+
+      // Format money if applicable
+      if (key.toLowerCase().includes("growth") || key.toLowerCase().includes("amt")) {
+        const valNum = Number(rawValue) || 0;
+        displayValue = (valNum >= 0 ? "+" : "") + formatCurrency(valNum);
+      } else if (rawValue === true || rawValue === "true" || rawValue === "Yes") {
+        displayValue = "✓ Yes";
+      } else if (rawValue === false || rawValue === "false" || rawValue === "No") {
+        displayValue = "✗ No";
+      }
+      // Keep long free-text values (e.g. audit notes) from overflowing the card
+      if (displayValue.length > 42) displayValue = displayValue.slice(0, 40) + "…";
+
+      if (rowCount % 2 === 0) {
         ctx.fillStyle = "rgba(255, 255, 255, 0.02)";
         ctx.beginPath();
         ctx.roundRect(cardX + 60, currentItemY - 35, cardW - 120, 60, 10);
         ctx.fill();
-
-        drawText(`${b.solCode} - ${b.branchName}`, cardX + 90, currentItemY, "500 22px Inter", "#ffffff", "left", 540);
-        
-        if (hasSubmitted) {
-          drawText("✓ AUDITED", cardX + cardW - 100, currentItemY, "bold 22px Inter", "#34d399", "right");
-        } else {
-          drawText("✗ PENDING", cardX + cardW - 100, currentItemY, "bold 22px Inter", "#f87171", "right");
-        }
-        currentItemY += 80;
-      });
-    } else {
-      drawText("KEY METRICS PERFORMANCE", 540, dataY, "bold 24px Inter", "#eab308", "center");
-      
-      let currentItemY = dataY + 70;
-      const excludedKeys = [
-        "action", "token", "rollNumber", "submitterName", "role", "solCode", 
-        "branchName", "reportingDate", "statusSB", "statusCD", "statusTD", "statusCASA",
-        "Reporting Date", "Roll Number", "Submitter Name", "Submitter Nam", "Role", "SOL Code", "Branch Name"
-      ];
-      
-      let rowCount = 0;
-      for (const key in lastSubmittedPayload) {
-        if (excludedKeys.includes(key)) continue;
-        if (rowCount >= 10) break; // prevent overflowing the card boundary
-
-        const rawValue = lastSubmittedPayload[key];
-        let displayValue = String(rawValue);
-        
-        // Format money if applicable
-        if (key.toLowerCase().includes("growth") || key.toLowerCase().includes("amt")) {
-          const valNum = Number(rawValue) || 0;
-          displayValue = (valNum >= 0 ? "+" : "") + formatCurrency(valNum);
-        } else if (rawValue === true || rawValue === "true" || rawValue === "Yes") {
-          displayValue = "✓ Yes";
-        } else if (rawValue === false || rawValue === "false" || rawValue === "No") {
-          displayValue = "✗ No";
-        }
-
-        if (rowCount % 2 === 0) {
-          ctx.fillStyle = "rgba(255, 255, 255, 0.02)";
-          ctx.beginPath();
-          ctx.roundRect(cardX + 60, currentItemY - 35, cardW - 120, 60, 10);
-          ctx.fill();
-        }
-
-        const label = labelForKey(key);
-        drawText(label, cardX + 90, currentItemY, "500 22px Inter", "#cbd5e1", "left", 540);
-        drawText(displayValue, cardX + cardW - 90, currentItemY, "bold 22px Inter", "#ffffff", "right");
-
-        currentItemY += 80;
-        rowCount++;
       }
-      
-      if (rowCount === 0) {
-        drawText("Daily reports saved successfully.", 540, dataY + 120, "italic 22px Inter", "#94a3b8", "center");
-      }
+
+      const label = labelForKey(key);
+      drawText(label, cardX + 90, currentItemY, "500 22px Inter", "#cbd5e1", "left", 470);
+      drawText(displayValue, cardX + cardW - 90, currentItemY, "bold 22px Inter", "#ffffff", "right", 380);
+
+      currentItemY += 80;
+      rowCount++;
+    }
+
+    if (rowCount === 0) {
+      drawText("Report saved successfully.", 540, dataY + 120, "italic 22px Inter", "#94a3b8", "center");
     }
 
     // 8. Footer Info
