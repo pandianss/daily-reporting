@@ -2686,6 +2686,7 @@ async function loadGuardianLandingPage() {
     
     grid.appendChild(card);
   });
+  switchView("guardian-landing-view");
 }
 
 function updateWizardView() {
