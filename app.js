@@ -1672,6 +1672,22 @@ function setupFormHandlers() {
 function showSuccessPage(solCode) {
   const normRole = String(currentUser.role).trim().toUpperCase();
   
+  // Try to retrieve existing submission to populate lastSubmittedPayload (e.g. on page refresh or login redirection)
+  if (!lastSubmittedPayload) {
+    const todayStr = document.getElementById("form-date").value || getTodayDateString();
+    const match = globalSubmissions.find(sub => {
+      const subSol = String(sub.solCode || sub["SOL Code"]).trim();
+      const subRole = String(sub.role || sub["Role"]).trim().toUpperCase();
+      const subDate = sub.reportingDate || sub["Reporting Date"];
+      return subSol === String(solCode).trim() &&
+             subRole === normRole &&
+             subDate === todayStr;
+    });
+    if (match) {
+      lastSubmittedPayload = match;
+    }
+  }
+  
   // 1. Populate static submitter details card
   document.getElementById("success-date").textContent = document.getElementById("form-date").value || getTodayDateString();
   document.getElementById("success-sol").textContent = solCode;
@@ -3054,6 +3070,14 @@ function generateWhatsAppStatusImage(solCode) {
       const rawValue = lastSubmittedPayload[key];
       // Skip fields the user left blank (e.g. empty audit notes) for a clean list
       if (rawValue === "" || rawValue === null || rawValue === undefined) continue;
+      
+      // Skip numeric zero values so only parameters with actual values/activity are shown
+      const valNum = Number(rawValue);
+      if (!isNaN(valNum) && valNum === 0) continue;
+
+      // Skip unchecked/false checkboxes
+      if (rawValue === false || rawValue === "false" || rawValue === "No") continue;
+      
       if (rowCount >= 12) break; // prevent overflowing the card boundary
 
       let displayValue = String(rawValue);
