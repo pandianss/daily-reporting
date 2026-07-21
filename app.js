@@ -259,6 +259,37 @@ function normalizeSubmission(row) {
     if (key === "action") continue; // internal API field, not report data
     out[SHEET_KEY_MAP[key] || key] = row[key];
   }
+  if (out.solCode !== undefined && out.solCode !== null) {
+    out.solCode = String(out.solCode).trim();
+  }
+  if (out.role) {
+    let r = String(out.role).trim().toLowerCase();
+    if (r.includes("1st")) out.role = "1st Line";
+    else if (r.includes("2nd")) out.role = "2nd Line";
+    else if (r.includes("guard")) out.role = "RO Guardian";
+    else if (r.includes("lbo")) out.role = "LBO";
+    else if (r.includes("po")) out.role = "PO";
+  }
+  if (out.reportingDate) {
+    try {
+      // If it is an ISO/long date string, extract yyyy-mm-dd
+      let d = new Date(out.reportingDate);
+      if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        out.reportingDate = `${yyyy}-${mm}-${dd}`;
+      } else {
+        let s = String(out.reportingDate).trim();
+        let m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+        if (m) {
+          out.reportingDate = `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+        }
+      }
+    } catch (e) {
+      console.warn("Date normalization failed:", e);
+    }
+  }
   return out;
 }
 
