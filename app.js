@@ -3037,7 +3037,7 @@ function generateWhatsAppStatusImage(solCode) {
     // (applies to every role, including Guardians, whose submitted data is
     // their audit confirmation and notes — not the branch status list)
     const dataY = solY + 110;
-    const listTitle = normRole === "RO GUARDIAN" ? "AUDIT DETAILS SUBMITTED" : "KEY METRICS PERFORMANCE";
+    const listTitle = normRole === "RO GUARDIAN" ? "TODAY'S PERFORMANCE REPORT" : "KEY METRICS PERFORMANCE";
     drawText(listTitle, 540, dataY, "bold 24px Inter", "#eab308", "center");
 
     let currentItemY = dataY + 70;
