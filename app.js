@@ -472,6 +472,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupNavigation();
   setupFormHandlers();
   checkCachedSession();
+  setupAccordionBehavior();
   
   // Request system notification permission
   if ("Notification" in window && Notification.permission === "default") {
@@ -482,6 +483,14 @@ document.addEventListener("DOMContentLoaded", () => {
   renderRoleParamMappingTable();
 });
 
+function applyTheme(theme) {
+  if (theme === "light" || theme === "dark") {
+    document.documentElement.setAttribute("data-theme", theme);
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+}
+
 // Load configuration
 function loadSettings() {
   const cachedSettings = localStorage.getItem("iob_portal_settings");
@@ -491,24 +500,123 @@ function loadSettings() {
       appSettings.scriptUrl = parsed.scriptUrl;
     }
     appSettings.mockMode = parsed.mockMode;
+    appSettings.theme = parsed.theme || "system";
+  } else {
+    appSettings.theme = "system";
   }
   
   // Set in configuration inputs
   document.getElementById("google-script-url").value = appSettings.scriptUrl || "";
   document.getElementById("toggle-mock-mode").checked = appSettings.mockMode;
+  document.getElementById("theme-select").value = appSettings.theme;
+  
+  applyTheme(appSettings.theme);
 }
 
 // Save configuration
 document.getElementById("btn-save-settings").addEventListener("click", () => {
   const url = document.getElementById("google-script-url").value.trim();
   const mock = document.getElementById("toggle-mock-mode").checked;
+  const theme = document.getElementById("theme-select").value;
 
   appSettings.scriptUrl = url;
   appSettings.mockMode = mock;
+  appSettings.theme = theme;
+  
+  applyTheme(theme);
   
   localStorage.setItem("iob_portal_settings", JSON.stringify(appSettings));
   showToast("Settings saved successfully!");
 });
+
+// Draft auto-save helpers
+function getDraftStorageKey() {
+  if (!currentUser) return null;
+  let solCode = "";
+  const normRole = String(currentUser.role).trim().toUpperCase();
+  if (normRole === "RO GUARDIAN") {
+    const select = document.getElementById("guardian-sol-select");
+    solCode = select ? select.value : "";
+  } else {
+    const sol = currentUser.branches && currentUser.branches[0];
+    solCode = sol ? sol.solCode : "";
+  }
+  if (!solCode) return null;
+  
+  const formDate = document.getElementById("form-date").value || getTodayDateString();
+  return `iob_draft_${currentUser.rollNumber}_${solCode}_${formDate}`;
+}
+
+function saveDraftToLocalStorage() {
+  const key = getDraftStorageKey();
+  if (!key) return;
+
+  const form = document.getElementById("reporting-form");
+  if (!form) return;
+
+  const draftData = {};
+  
+  form.querySelectorAll("input, select, textarea").forEach(el => {
+    // Only save mapped active fields (i.e. those that are visible / have data-param)
+    let container = el.closest("[data-param]") || el.closest(".form-checkbox-group") || el.closest(".form-group");
+    if (container && container.style.display === "none") return;
+
+    const name = el.name || el.id;
+    if (name) {
+      if (el.type === "checkbox") {
+        draftData[name] = el.checked;
+      } else {
+        draftData[name] = el.value;
+      }
+    }
+  });
+
+  localStorage.setItem(key, JSON.stringify(draftData));
+}
+
+function loadDraftFromLocalStorage() {
+  const key = getDraftStorageKey();
+  if (!key) return;
+
+  const raw = localStorage.getItem(key);
+  if (!raw) return;
+
+  try {
+    const draftData = JSON.parse(raw);
+    const form = document.getElementById("reporting-form");
+    if (!form) return;
+
+    form.querySelectorAll("input, select, textarea").forEach(el => {
+      const name = el.name || el.id;
+      if (name && draftData[name] !== undefined) {
+        if (el.type === "checkbox") {
+          el.checked = draftData[name];
+        } else {
+          el.value = draftData[name];
+        }
+      }
+    });
+
+    updateGrowthStatusBadges();
+  } catch (e) {
+    console.error("Failed to load draft from localStorage", e);
+  }
+}
+
+function clearDraftFromLocalStorage() {
+  const key = getDraftStorageKey();
+  if (key) {
+    localStorage.removeItem(key);
+  }
+}
+
+function setupDraftAutoSave() {
+  const form = document.getElementById("reporting-form");
+  if (form) {
+    form.addEventListener("input", saveDraftToLocalStorage);
+    form.addEventListener("change", saveDraftToLocalStorage);
+  }
+}
 
 // Setup navigation actions
 function setupNavigation() {
@@ -540,7 +648,7 @@ function switchView(viewId) {
   if (currentUser) {
     const normRole = String(currentUser.role).trim().toUpperCase();
     const hasReports = ["RO SRM", "CHIEF MANAGER", "ADMIN", "RO GUARDIAN"].includes(normRole);
-    const hasEntry = ["1ST LINE", "2ND LINE", "RO GUARDIAN"].includes(normRole);
+    const hasEntry = ["1ST LINE", "2ND LINE", "RO GUARDIAN", "LBO", "PO"].includes(normRole);
     const isAdmin = normRole === "ADMIN";
 
     if (viewId === "admin-view" && !isAdmin) {
@@ -799,7 +907,7 @@ function setupSessionUI() {
   // Filter navigation buttons (case-insensitive and trimmed for robustness)
   const normRole = String(currentUser.role).trim().toUpperCase();
   const hasReports = ["RO SRM", "CHIEF MANAGER", "ADMIN", "RO GUARDIAN"].includes(normRole);
-  const hasEntry = ["1ST LINE", "2ND LINE", "RO GUARDIAN"].includes(normRole);
+  const hasEntry = ["1ST LINE", "2ND LINE", "RO GUARDIAN", "LBO", "PO"].includes(normRole);
   const isAdmin = normRole === "ADMIN";
   const isGuardian = normRole === "RO GUARDIAN";
   
@@ -848,11 +956,20 @@ function setupSessionUI() {
 function setupReportingForm() {
   const role = currentUser.role;
   const solSelect = document.getElementById("guardian-sol-select");
+  const isGuardian = String(role).trim().toUpperCase() === "RO GUARDIAN";
+  if (solSelect) {
+    solSelect.required = isGuardian;
+  }
+
+  // Collapse all accordion cards by default
+  document.querySelectorAll(".card.collapsible-card").forEach(card => {
+    card.classList.add("collapsed");
+  });
   
   const branchHeading = document.getElementById("form-branch-heading");
   
   // Set heading and load bases
-  if (String(role).trim().toUpperCase() === "RO GUARDIAN") {
+  if (isGuardian) {
     branchHeading.textContent = "Guardian Multi-Branch Supervisor Review";
     
     // Only build the options list if it's empty to prevent resetting selection loops!
@@ -926,6 +1043,14 @@ function setupReportingForm() {
 
 // Fetch historical and monthly base numbers for reference
 function loadBranchBases(solCode) {
+  const form = document.getElementById("reporting-form");
+  if (form) {
+    form.reset();
+    const dateInput = document.getElementById("form-date");
+    const currentDate = dateInput ? dateInput.value : getTodayDateString();
+    if (dateInput) dateInput.value = currentDate;
+  }
+
   if (appSettings.mockMode) {
     renderBranchBases(mockDailyBase[solCode] || {}, mockMonthlyBase[solCode] || {});
   } else {
@@ -954,6 +1079,16 @@ function renderBranchBases(dBase, mBase) {
       el.className = `badge badge-${status === "Positive" ? "success" : "danger"}`;
     }
   });
+
+  const summaryStatus = document.getElementById("summary-status");
+  if (summaryStatus) {
+    summaryStatus.innerHTML = `
+      <span class="summary-badge ${statusSB === 'Positive' ? 'badge-success' : 'badge-danger'}">SB: ${statusSB}</span>
+      <span class="summary-badge ${statusCD === 'Positive' ? 'badge-success' : 'badge-danger'}">CD: ${statusCD}</span>
+      <span class="summary-badge ${statusCASA === 'Positive' ? 'badge-success' : 'badge-danger'}">CASA: ${statusCASA}</span>
+    `;
+  }
+
   // Low balance funding grid: totals come from admin monthly ingestion
   document.getElementById("low-bal-total-sb").textContent = mBase.baseLowBalSB || 0;
   document.getElementById("low-bal-total-cd").textContent = mBase.baseLowBalCD || 0;
@@ -1000,6 +1135,9 @@ function renderBranchBases(dBase, mBase) {
   document.getElementById("base-inoperative").textContent = mBase.baseInoperativeAccts || 0;
   document.getElementById("base-inactive").textContent = mBase.baseInactiveAccts || 0;
   document.getElementById("base-deaf").textContent = mBase.baseDeafAccts || 0;
+  
+  loadDraftFromLocalStorage();
+  updateAccordionSummaries(dBase, mBase);
 }
 
 async function fetchDashboardTelemetry(solCode) {
@@ -1036,10 +1174,36 @@ async function fetchDashboardTelemetry(solCode) {
 
 // Submitting Reporting Form
 function setupFormHandlers() {
+  setupDraftAutoSave();
   const form = document.getElementById("reporting-form");
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     
+    // Client-side negative value validation
+    const allowedNegativeIds = ["sb-growth", "cd-growth", "td-growth"];
+    let validationFailed = false;
+    form.querySelectorAll("input[type='number']").forEach(input => {
+      let container = input.closest("[data-param]") || input.closest(".form-checkbox-group") || input.closest(".form-group");
+      if (container && container.style.display === "none") return;
+      
+      const val = Number(input.value) || 0;
+      if (val < 0 && !allowedNegativeIds.includes(input.id)) {
+        let labelText = "";
+        const labelEl = input.labels && input.labels[0];
+        if (labelEl) {
+          labelText = labelEl.textContent;
+        } else {
+          const parent = input.closest(".form-group") || input.closest("td") || input.closest("tr");
+          const label = parent ? parent.querySelector("label") || parent.querySelector("strong") : null;
+          labelText = label ? label.textContent : (input.name || input.id);
+        }
+        showToast(`Field "${labelText.replace(/\(.*\)/g, "").replace(/:/g, "").trim()}" cannot be negative.`);
+        input.focus();
+        validationFailed = true;
+      }
+    });
+    if (validationFailed) return;
+
     // Resolve reporting SOL Details
     let solCode = "";
     let branchName = "";
@@ -1136,6 +1300,7 @@ function setupFormHandlers() {
       const record = normalizeSubmission(payload);
       record.timestamp = new Date().toISOString();
       mockSubmissions.push(record);
+      clearDraftFromLocalStorage();
       form.reset();
       document.getElementById("form-date").value = getTodayDateString();
       updateGrowthStatusBadges();
@@ -1152,6 +1317,7 @@ function setupFormHandlers() {
       try {
         const result = await apiPost(payload);
         if (result.success) {
+          clearDraftFromLocalStorage();
           form.reset();
           document.getElementById("form-date").value = getTodayDateString();
           updateGrowthStatusBadges();
@@ -1647,7 +1813,7 @@ function openDetailModal(data) {
   let index = 0;
   
   for (let key in data) {
-    if (!ignoreKeys.includes(key) && data[key] !== null && data[key] !== undefined) {
+    if (!ignoreKeys.includes(key) && data[key] !== null && data[key] !== undefined && data[key] !== "") {
       let val = data[key];
       if (typeof val === "boolean") {
         val = val ? "Yes" : "No";
@@ -2153,6 +2319,7 @@ function updateGrowthStatusBadges() {
       badge.className = "badge badge-danger";
     }
   });
+  updateGrowthSummaryBadge();
 }
 
 function escapeHtml(value) {
@@ -2340,4 +2507,112 @@ async function loadGuardianLandingPage() {
     
     grid.appendChild(card);
   });
+}
+
+function setupAccordionBehavior() {
+  document.addEventListener("click", (e) => {
+    const header = e.target.closest(".card-header");
+    if (!header) return;
+    
+    if (e.target.closest("button") || e.target.closest("a") || e.target.closest("select") || e.target.closest("input")) {
+      return; // Do not toggle if they clicked on interactive controls
+    }
+
+    const card = header.closest(".card.collapsible-card");
+    if (!card) return;
+    
+    card.classList.toggle("collapsed");
+  });
+}
+
+function updateAccordionSummaries(dBase, mBase) {
+  // Low Balance Accounts Funding summary
+  const summaryLowBal = document.getElementById("summary-low-bal");
+  if (summaryLowBal) {
+    summaryLowBal.innerHTML = `
+      <span class="summary-badge">SB Base: ${mBase.baseLowBalSB || 0}</span>
+      <span class="summary-badge">CD Base: ${mBase.baseLowBalCD || 0}</span>
+    `;
+  }
+
+  // Balance Growth summary
+  updateGrowthSummaryBadge();
+
+  // Account Opening Performance summary
+  const summaryAO = document.getElementById("summary-ao");
+  if (summaryAO) {
+    const sbGap = Math.max(0, (Number(mBase.targetAcctsSB) || 0) - (Number(dBase.uptoYestAcctsSB) || 0));
+    const cdGap = Math.max(0, (Number(mBase.targetAcctsCD) || 0) - (Number(dBase.uptoYestAcctsCD) || 0));
+    summaryAO.innerHTML = `
+      <span class="summary-badge">SB Gap: ${sbGap}</span>
+      <span class="summary-badge">CD Gap: ${cdGap}</span>
+    `;
+  }
+
+  // Premium Product Adoption summary
+  const summaryPA = document.getElementById("summary-pa");
+  if (summaryPA) {
+    summaryPA.innerHTML = `
+      <span class="summary-badge">Step-up RD: ${dBase.currMonthStepUpRD || 0}</span>
+      <span class="summary-badge">Platinum: ${dBase.currMonthPlatinum || 0}</span>
+    `;
+  }
+
+  // Activation summary
+  const summaryActivation = document.getElementById("summary-activation");
+  if (summaryActivation) {
+    summaryActivation.innerHTML = `
+      <span class="summary-badge">Inop Base: ${mBase.baseInoperativeAccts || 0}</span>
+      <span class="summary-badge">Inactive Base: ${mBase.baseInactiveAccts || 0}</span>
+    `;
+  }
+
+  // Digital Banking summary
+  const summaryDigital = document.getElementById("summary-digital");
+  if (summaryDigital) {
+    summaryDigital.innerHTML = `
+      <span class="summary-badge">CC Target: ${dBase.targetCreditCards || 0}</span>
+      <span class="summary-badge">Connect Target: ${dBase.targetIobConnect || 0}</span>
+    `;
+  }
+
+  // Scheme summary
+  const summarySchemes = document.getElementById("summary-schemes");
+  if (summarySchemes) {
+    summarySchemes.innerHTML = `
+      <span class="summary-badge">CASA Allotted: ${dBase.allottedCasaWinback || 0}</span>
+    `;
+  }
+
+  // 2nd Line Reactivation summary
+  const summaryReactivation = document.getElementById("summary-reactivation");
+  if (summaryReactivation) {
+    summaryReactivation.innerHTML = `
+      <span class="summary-badge">Inop: ${mBase.baseInoperativeAccts || 0}</span>
+      <span class="summary-badge">Inactive: ${mBase.baseInactiveAccts || 0}</span>
+    `;
+  }
+}
+
+function updateGrowthSummaryBadge() {
+  const summaryGrowth = document.getElementById("summary-growth");
+  if (!summaryGrowth) return;
+
+  const getStatus = (segment) => {
+    const inputVal = document.getElementById(`${segment.toLowerCase()}-growth`).value;
+    const growth = Number(inputVal) || 0;
+    const totalOS = (Number(currentBranchBases.daily["yestBal" + segment]) || 0) + growth;
+    const base31Mar = Number(currentBranchBases.monthly["bal31Mar" + segment]) || 0;
+    return totalOS >= base31Mar ? "Positive" : "Negative";
+  };
+
+  const sbStatus = getStatus("SB");
+  const cdStatus = getStatus("CD");
+  const tdStatus = getStatus("TD");
+
+  summaryGrowth.innerHTML = `
+    <span class="summary-badge ${sbStatus === 'Positive' ? 'badge-success' : 'badge-danger'}">SB: ${sbStatus}</span>
+    <span class="summary-badge ${cdStatus === 'Positive' ? 'badge-success' : 'badge-danger'}">CD: ${cdStatus}</span>
+    <span class="summary-badge ${tdStatus === 'Positive' ? 'badge-success' : 'badge-danger'}">TD: ${tdStatus}</span>
+  `;
 }

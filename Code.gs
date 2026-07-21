@@ -547,6 +547,15 @@ function submitReport(session, data) {
     normalizedData[key.toLowerCase().replace(/_/g, "")] = data[key];
   }
 
+  // Server-side validation: ensure count and amount fields (except growth) are not negative
+  const allowedNegativeKeys = ["growthsb", "growthcd", "growthtd"];
+  for (const key in normalizedData) {
+    const val = normalizedData[key];
+    if (typeof val === "number" && val < 0 && !allowedNegativeKeys.includes(key)) {
+      return errorResponse("Invalid negative value for field: " + key, "BAD_REQUEST");
+    }
+  }
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName("Submissions");
   if (!sheet) return errorResponse("'Submissions' sheet missing.");
