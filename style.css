@@ -827,3 +827,17 @@ header {
   }
 }
 
+#wizard-navigation-bar {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+#wizard-navigation-bar button {
+  width: auto !important;
+  flex-shrink: 0;
+}
+
