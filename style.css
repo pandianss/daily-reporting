@@ -734,17 +734,13 @@ header {
 .card-header {
   padding: 1.25rem 1.5rem;
   background-color: var(--card-bg);
-  cursor: pointer;
+  cursor: default;
   display: flex;
   justify-content: space-between;
   align-items: center;
   user-select: none;
   border-bottom: 1px solid var(--border-color);
   transition: background-color 0.2s ease;
-}
-
-.card-header:hover {
-  background-color: rgba(99, 102, 241, 0.04);
 }
 
 .card-header .card-title {
@@ -800,13 +796,7 @@ header {
 }
 
 .accordion-icon {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  transition: transform 0.2s ease;
-}
-
-.card.collapsed .accordion-icon {
-  transform: rotate(-90deg);
+  display: none !important;
 }
 
 .card-body {

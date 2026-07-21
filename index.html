@@ -150,12 +150,17 @@
 
       <!-- 4. ENTRY FORM VIEW -->
       <section id="entry-view" class="view-panel">
-        <div class="card" style="margin-bottom: 1rem;">
-          <h2 style="font-weight: 600; font-size: 1.25rem;">Daily Reporting Form</h2>
-          <p style="color: var(--text-secondary); font-size: 0.875rem;" id="form-branch-heading">Reporting details for Branch SOL</p>
-        </div>
-
         <form id="reporting-form">
+          <div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h2 style="font-weight: 600; font-size: 1.25rem; margin: 0;">Daily Reporting Form</h2>
+              <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0;" id="form-branch-heading">Reporting details for Branch SOL</p>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <label for="form-date" style="font-weight: 600; font-size: 0.875rem; margin: 0;">Reporting Date:</label>
+              <input type="date" id="form-date" class="filter-input" required>
+            </div>
+          </div>
           <!-- 1st Line Officer Form -->
           <div id="form-1st-line-section" style="display: none;">
             
@@ -662,13 +667,12 @@
              </div>
            </div>
 
-          <!-- Shared Submit Panel -->
-          <div class="card" style="display: flex; flex-direction: column; gap: 1rem; align-items: flex-end;">
-            <div style="display: flex; gap: 1rem; align-items: center;">
-              <label for="form-date" style="font-weight: 600; font-size: 0.875rem; margin: 0;">Reporting Date:</label>
-              <input type="date" id="form-date" class="filter-input" required>
-            </div>
-            <button type="submit" class="btn btn-primary btn-submit-form">Submit Performance Report</button>
+          <!-- Wizard Navigation controls -->
+          <div class="card" id="wizard-navigation-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1.5rem;">
+            <button type="button" id="btn-wizard-prev" class="btn btn-secondary" style="width: auto;">← Back</button>
+            <span id="wizard-progress-indicator" style="font-weight: 600; font-size: 0.875rem; color: var(--text-secondary);">Section 1 of 1</span>
+            <button type="button" id="btn-wizard-next" class="btn btn-primary" style="width: auto;">Next →</button>
+            <button type="submit" id="btn-wizard-submit" class="btn btn-success btn-submit-form" style="width: auto; display: none;">Submit Performance Report</button>
           </div>
         </form>
       </section>

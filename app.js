@@ -2,6 +2,8 @@
 
 // State Management
 let currentUser = null;
+let wizardCards = [];
+let currentStepIndex = 0;
 let appSettings = {
   // Hardcode your Google Apps Script Web App URL here to make it automatically live for all devices (mobile/desktop):
   scriptUrl: "https://script.google.com/macros/s/AKfycbxLkY22tJA8ryrUzrd055KIDkHGsh0EUTGXN7QFTO_wWOpVoFWHggP7dEX7UwsghXLgKA/exec",
@@ -472,7 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupNavigation();
   setupFormHandlers();
   checkCachedSession();
-  setupAccordionBehavior();
+  setupWizardBehavior();
   
   // Request system notification permission
   if ("Notification" in window && Notification.permission === "default") {
@@ -961,11 +963,6 @@ function setupReportingForm() {
     solSelect.required = isGuardian;
   }
 
-  // Collapse all accordion cards by default
-  document.querySelectorAll(".card.collapsible-card").forEach(card => {
-    card.classList.add("collapsed");
-  });
-  
   const branchHeading = document.getElementById("form-branch-heading");
   
   // Set heading and load bases
@@ -1013,11 +1010,19 @@ function setupReportingForm() {
 
   // 2. Hide/Show parent cards
   const cards = document.querySelectorAll("#reporting-form .card");
-  const isGuardianUser = currentUser && String(currentUser.role).trim().toUpperCase() === "RO GUARDIAN";
+  const normRole = String(currentUser.role).trim().toUpperCase();
+  const isGuardianUser = currentUser && normRole === "RO GUARDIAN";
+
+  // Handle static status card visibility explicitly
+  const cardStatus = document.getElementById("card-status");
+  if (cardStatus) {
+    const is2ndLineOrMgmt = ["2ND LINE", "ADMIN", "CHIEF MANAGER", "RO SRM"].includes(normRole);
+    cardStatus.style.display = is2ndLineOrMgmt ? "" : "none";
+  }
 
   cards.forEach(card => {
-    // If the card is the submit panel, keep it visible!
-    if (card.querySelector(".btn-submit-form")) {
+    // If the card is the submit panel/wizard navigation bar, keep it visible!
+    if (card.id === "wizard-navigation-bar" || card.querySelector("#wizard-navigation-bar")) {
       card.style.display = "";
       return;
     }
@@ -1039,6 +1044,20 @@ function setupReportingForm() {
       card.style.display = hasVisible ? "" : "none";
     }
   });
+
+  // Collect visible cards for the wizard steps
+  wizardCards = [];
+  cards.forEach(card => {
+    if (card.id === "wizard-navigation-bar" || card.querySelector("#wizard-navigation-bar")) {
+      return;
+    }
+    if (card.style.display !== "none") {
+      wizardCards.push(card);
+    }
+  });
+
+  currentStepIndex = 0;
+  updateWizardView();
 }
 
 // Fetch historical and monthly base numbers for reference
@@ -2509,20 +2528,61 @@ async function loadGuardianLandingPage() {
   });
 }
 
-function setupAccordionBehavior() {
-  document.addEventListener("click", (e) => {
-    const header = e.target.closest(".card-header");
-    if (!header) return;
-    
-    if (e.target.closest("button") || e.target.closest("a") || e.target.closest("select") || e.target.closest("input")) {
-      return; // Do not toggle if they clicked on interactive controls
-    }
-
-    const card = header.closest(".card.collapsible-card");
-    if (!card) return;
-    
-    card.classList.toggle("collapsed");
+function updateWizardView() {
+  // Hide all wizard cards
+  wizardCards.forEach(card => {
+    card.style.display = "none";
   });
+  
+  if (wizardCards.length === 0) return;
+  
+  // Show only the current card
+  const activeCard = wizardCards[currentStepIndex];
+  if (activeCard) {
+    activeCard.style.display = "block";
+    activeCard.classList.remove("collapsed");
+  }
+  
+  // Update buttons
+  const btnPrev = document.getElementById("btn-wizard-prev");
+  const btnNext = document.getElementById("btn-wizard-next");
+  const btnSubmit = document.getElementById("btn-wizard-submit");
+  const progress = document.getElementById("wizard-progress-indicator");
+  
+  if (btnPrev) btnPrev.style.display = currentStepIndex > 0 ? "block" : "none";
+  if (btnNext) btnNext.style.display = currentStepIndex < wizardCards.length - 1 ? "block" : "none";
+  if (btnSubmit) btnSubmit.style.display = currentStepIndex === wizardCards.length - 1 ? "block" : "none";
+  
+  if (progress) {
+    progress.textContent = `Section ${currentStepIndex + 1} of ${wizardCards.length}`;
+  }
+}
+
+function setupWizardBehavior() {
+  const btnPrev = document.getElementById("btn-wizard-prev");
+  const btnNext = document.getElementById("btn-wizard-next");
+
+  if (btnPrev) {
+    btnPrev.addEventListener("click", () => {
+      if (currentStepIndex > 0) {
+        currentStepIndex--;
+        updateWizardView();
+        const form = document.getElementById("reporting-form");
+        if (form) form.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  }
+
+  if (btnNext) {
+    btnNext.addEventListener("click", () => {
+      if (currentStepIndex < wizardCards.length - 1) {
+        currentStepIndex++;
+        updateWizardView();
+        const form = document.getElementById("reporting-form");
+        if (form) form.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  }
 }
 
 function updateAccordionSummaries(dBase, mBase) {
