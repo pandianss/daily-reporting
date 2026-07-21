@@ -989,6 +989,21 @@ function setupReportingForm() {
     loadBranchBases(sol.solCode);
   }
 
+  // Apply role-based field/card visibility and (re)build the wizard steps,
+  // starting the user at the first step.
+  applyReportingFormLayout(true);
+}
+
+// Applies role-based visibility to fields/cards and rebuilds the wizard steps.
+// Split out from setupReportingForm so a mid-session refresh (e.g. a fresh
+// roleParamMapping arriving from the server) can re-apply the layout WITHOUT
+// re-loading branch bases — which would recurse through loadBranchBases and
+// fetchDashboardTelemetry — or snapping the wizard back to the first step.
+// resetStep=true jumps to step 1 (initial setup / after submit); false keeps
+// the user's current step, clamped to the new step range.
+function applyReportingFormLayout(resetStep) {
+  const role = currentUser.role;
+
   // Display sections containing metrics (guard against absent wrappers so a
   // single missing id can't abort the whole form/wizard setup)
   ["form-1st-line-section", "form-2nd-line-section", "form-ro-guardian-section", "form-loans-section"].forEach(sectionId => {
@@ -1059,7 +1074,11 @@ function setupReportingForm() {
     }
   });
 
-  currentStepIndex = 0;
+  if (resetStep) {
+    currentStepIndex = 0;
+  } else if (currentStepIndex > wizardCards.length - 1) {
+    currentStepIndex = Math.max(0, wizardCards.length - 1);
+  }
   updateWizardView();
 }
 
@@ -1179,7 +1198,10 @@ async function fetchDashboardTelemetry(solCode) {
       if (data.roleParamMapping) {
         roleParamMapping = data.roleParamMapping;
         localStorage.setItem("iob_role_param_mapping", JSON.stringify(roleParamMapping));
-        setupReportingForm();
+        // Re-apply layout only — must NOT call setupReportingForm here, which
+        // would loadBranchBases -> fetchDashboardTelemetry again (infinite
+        // refresh) and reset the wizard to step 1 mid-navigation.
+        applyReportingFormLayout(false);
       }
       
       if (data.roBroadcastMessage) {
