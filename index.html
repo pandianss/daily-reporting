@@ -7,13 +7,15 @@
   <!-- Bump ?v= on every asset change so browsers don't serve stale cached copies -->
   <link rel="stylesheet" href="style.css?v=20260721-3">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lottie Animation library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
 </head>
 <body>
   <div class="app-container">
     <!-- Header -->
     <header>
       <div class="logo-section" style="display: flex; align-items: center; gap: 12px;">
-        <img src="2026logo_min.svg" alt="IOB Logo" style="height: 50px; width: auto;">
+        <div id="lottie-logo-container" style="width: 55px; height: 55px;"></div>
         <div>
           <h1 style="font-size: 1.5rem; font-weight: 700; color: var(--primary-light); letter-spacing: -0.025em; margin: 0; line-height: 1.2;">IOB</h1>
           <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0; line-height: 1.2;">Daily Performance Reporting Portal</p>
@@ -68,7 +70,7 @@
       <section id="login-view" class="view-panel active">
         <div class="login-wrapper">
           <div class="login-card">
-            <div class="login-icon">🔑</div>
+            <div id="lottie-login-container" style="width: 140px; height: 140px; margin: 0 auto 1.5rem;"></div>
             <h2>Employee Access</h2>
             <p>Please enter your employee Roll Number to access your assigned branch portal.</p>
             <form id="login-form">
@@ -918,6 +920,6 @@
   <!-- Toast Notification -->
   <div id="toast-bar" class="toast-msg">Action processed successfully</div>
 
-  <script src="app.js?v=20260721-10"></script>
+  <script src="app.js?v=20260721-11"></script>
 </body>
 </html>

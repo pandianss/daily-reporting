@@ -516,6 +516,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
   tagDOMWithParams();
   renderRoleParamMappingTable();
+  initializeLottieLogos();
 });
 
 function applyTheme(theme) {
@@ -3135,4 +3136,32 @@ function generateWhatsAppStatusImage(solCode) {
   };
 
   logo.src = "2026logo_min.svg";
+}
+
+function initializeLottieLogos() {
+  if (typeof lottie === "undefined") {
+    console.warn("Lottie library not loaded.");
+    return;
+  }
+
+  function setupLottieAnimation(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const anim = lottie.loadAnimation({
+      container: container,
+      renderer: "svg",
+      loop: false,
+      autoplay: true,
+      path: "iob_logo.json"
+    });
+
+    anim.addEventListener("complete", () => {
+      anim.loop = true;
+      anim.playSegments([90, 210], true);
+    });
+  }
+
+  setupLottieAnimation("lottie-logo-container");
+  setupLottieAnimation("lottie-login-container");
 }
