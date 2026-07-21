@@ -1652,7 +1652,10 @@ function setupFormHandlers() {
   document.getElementById("btn-success-action").addEventListener("click", () => {
     const normRole = String(currentUser.role).trim().toUpperCase();
     if (normRole === "RO GUARDIAN") {
-      loadGuardianLandingPage();
+      // switchView repopulates the grid via its guardian-landing hook; calling
+      // loadGuardianLandingPage directly here (which no longer switches views)
+      // would leave the success page on screen.
+      switchView("guardian-landing-view");
     } else {
       setupReportingForm();
       switchView("entry-view");
@@ -2696,7 +2699,6 @@ async function loadGuardianLandingPage() {
     
     grid.appendChild(card);
   });
-  switchView("guardian-landing-view");
 }
 
 function updateWizardView() {
