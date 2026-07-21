@@ -1273,11 +1273,18 @@ function setupFormHandlers() {
     const payload = {
       action: "submitReport",
       reportingDate: document.getElementById("form-date").value,
+      "Reporting Date": document.getElementById("form-date").value,
       rollNumber: currentUser.rollNumber,
+      "Roll Number": currentUser.rollNumber,
       submitterName: currentUser.name,
+      "Submitter Name": currentUser.name,
+      "Submitter Nam": currentUser.name,
       role: currentUser.role,
+      "Role": currentUser.role,
       solCode: solCode,
-      branchName: branchName
+      "SOL Code": solCode,
+      branchName: branchName,
+      "Branch Name": branchName
     };
 
     // Serialize Form Fields dynamically based on role's parameter configuration
